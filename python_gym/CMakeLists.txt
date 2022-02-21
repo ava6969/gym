@@ -1,0 +1,1 @@
+install(FILES python_env.h python_env.tpp atari_wrappers.py DESTINATION include/gym/python_gym)

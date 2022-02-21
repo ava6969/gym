@@ -1,0 +1,1 @@
+/usr/bin/cc   -O3 -DNDEBUG     CMakeFiles/zipdir.dir/zipdir.c.o  -o ../../../../bin/zipdir  /usr/lib/x86_64-linux-gnu/libz.so /usr/lib/x86_64-linux-gnu/libbz2.so ../../lzma/liblzma.a 

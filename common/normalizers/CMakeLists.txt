@@ -1,0 +1,1 @@
+install(FILES running_mean_std.h DESTINATION include/${PROJECT_NAME}/common/normalizers)

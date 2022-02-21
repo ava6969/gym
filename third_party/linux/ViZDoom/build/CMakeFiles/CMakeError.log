@@ -1,0 +1,153 @@
+Performing C SOURCE FILE Test CMAKE_HAVE_LIBC_PTHREAD failed with the following output:
+Change Dir: /home/dewe/ViZDoom/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make cmTC_91544/fast && /usr/bin/make -f CMakeFiles/cmTC_91544.dir/build.make CMakeFiles/cmTC_91544.dir/build
+make[1]: Entering directory '/home/dewe/ViZDoom/build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_91544.dir/src.c.o
+/usr/bin/cc   -DCMAKE_HAVE_LIBC_PTHREAD   -o CMakeFiles/cmTC_91544.dir/src.c.o   -c /home/dewe/ViZDoom/build/CMakeFiles/CMakeTmp/src.c
+Linking C executable cmTC_91544
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_91544.dir/link.txt --verbose=1
+/usr/bin/cc  -DCMAKE_HAVE_LIBC_PTHREAD    CMakeFiles/cmTC_91544.dir/src.c.o  -o cmTC_91544 
+/usr/bin/ld: CMakeFiles/cmTC_91544.dir/src.c.o: in function `main':
+src.c:(.text+0x46): undefined reference to `pthread_create'
+/usr/bin/ld: src.c:(.text+0x52): undefined reference to `pthread_detach'
+/usr/bin/ld: src.c:(.text+0x63): undefined reference to `pthread_join'
+collect2: error: ld returned 1 exit status
+make[1]: *** [CMakeFiles/cmTC_91544.dir/build.make:87: cmTC_91544] Error 1
+make[1]: Leaving directory '/home/dewe/ViZDoom/build/CMakeFiles/CMakeTmp'
+make: *** [Makefile:121: cmTC_91544/fast] Error 2
+
+
+Source file was:
+#include <pthread.h>
+
+void* test_func(void* data)
+{
+  return data;
+}
+
+int main(void)
+{
+  pthread_t thread;
+  pthread_create(&thread, NULL, test_func, NULL);
+  pthread_detach(thread);
+  pthread_join(thread, NULL);
+  pthread_atfork(NULL, NULL, NULL);
+  pthread_exit(NULL);
+
+  return 0;
+}
+
+Determining if the function pthread_create exists in the pthreads failed with the following output:
+Change Dir: /home/dewe/ViZDoom/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make cmTC_066bc/fast && /usr/bin/make -f CMakeFiles/cmTC_066bc.dir/build.make CMakeFiles/cmTC_066bc.dir/build
+make[1]: Entering directory '/home/dewe/ViZDoom/build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_066bc.dir/CheckFunctionExists.c.o
+/usr/bin/cc   -DCHECK_FUNCTION_EXISTS=pthread_create   -o CMakeFiles/cmTC_066bc.dir/CheckFunctionExists.c.o   -c /usr/share/cmake-3.16/Modules/CheckFunctionExists.c
+Linking C executable cmTC_066bc
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_066bc.dir/link.txt --verbose=1
+/usr/bin/cc  -DCHECK_FUNCTION_EXISTS=pthread_create    CMakeFiles/cmTC_066bc.dir/CheckFunctionExists.c.o  -o cmTC_066bc  -lpthreads 
+/usr/bin/ld: cannot find -lpthreads
+collect2: error: ld returned 1 exit status
+make[1]: *** [CMakeFiles/cmTC_066bc.dir/build.make:87: cmTC_066bc] Error 1
+make[1]: Leaving directory '/home/dewe/ViZDoom/build/CMakeFiles/CMakeTmp'
+make: *** [Makefile:121: cmTC_066bc/fast] Error 2
+
+
+
+Determining if the function itoa exists failed with the following output:
+Change Dir: /home/dewe/ViZDoom/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make cmTC_c8c7b/fast && /usr/bin/make -f CMakeFiles/cmTC_c8c7b.dir/build.make CMakeFiles/cmTC_c8c7b.dir/build
+make[1]: Entering directory '/home/dewe/ViZDoom/build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_c8c7b.dir/CheckFunctionExists.c.o
+/usr/bin/cc   -Wall -Wno-pointer-sign -Wno-uninitialized -Wno-unused-but-set-variable -DCHECK_FUNCTION_EXISTS=itoa   -o CMakeFiles/cmTC_c8c7b.dir/CheckFunctionExists.c.o   -c /usr/share/cmake-3.16/Modules/CheckFunctionExists.c
+Linking C executable cmTC_c8c7b
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_c8c7b.dir/link.txt --verbose=1
+/usr/bin/cc   -Wall -Wno-pointer-sign -Wno-uninitialized -Wno-unused-but-set-variable -DCHECK_FUNCTION_EXISTS=itoa    CMakeFiles/cmTC_c8c7b.dir/CheckFunctionExists.c.o  -o cmTC_c8c7b 
+/usr/bin/ld: CMakeFiles/cmTC_c8c7b.dir/CheckFunctionExists.c.o: in function `main':
+CheckFunctionExists.c:(.text+0x14): undefined reference to `itoa'
+collect2: error: ld returned 1 exit status
+make[1]: *** [CMakeFiles/cmTC_c8c7b.dir/build.make:87: cmTC_c8c7b] Error 1
+make[1]: Leaving directory '/home/dewe/ViZDoom/build/CMakeFiles/CMakeTmp'
+make: *** [Makefile:121: cmTC_c8c7b/fast] Error 2
+
+
+
+Determining if the function filelength exists failed with the following output:
+Change Dir: /home/dewe/ViZDoom/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make cmTC_01592/fast && /usr/bin/make -f CMakeFiles/cmTC_01592.dir/build.make CMakeFiles/cmTC_01592.dir/build
+make[1]: Entering directory '/home/dewe/ViZDoom/build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_01592.dir/CheckFunctionExists.c.o
+/usr/bin/cc   -Wall -Wextra -Wno-unused -Wno-unused-parameter -Wno-missing-field-initializers -Wno-unused-result   -DCHECK_FUNCTION_EXISTS=filelength   -o CMakeFiles/cmTC_01592.dir/CheckFunctionExists.c.o   -c /usr/share/cmake-3.16/Modules/CheckFunctionExists.c
+Linking C executable cmTC_01592
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_01592.dir/link.txt --verbose=1
+/usr/bin/cc -Wall -Wextra -Wno-unused -Wno-unused-parameter -Wno-missing-field-initializers -Wno-unused-result   -DCHECK_FUNCTION_EXISTS=filelength    CMakeFiles/cmTC_01592.dir/CheckFunctionExists.c.o  -o cmTC_01592 
+/usr/bin/ld: CMakeFiles/cmTC_01592.dir/CheckFunctionExists.c.o: in function `main':
+CheckFunctionExists.c:(.text+0x14): undefined reference to `filelength'
+collect2: error: ld returned 1 exit status
+make[1]: *** [CMakeFiles/cmTC_01592.dir/build.make:87: cmTC_01592] Error 1
+make[1]: Leaving directory '/home/dewe/ViZDoom/build/CMakeFiles/CMakeTmp'
+make: *** [Makefile:121: cmTC_01592/fast] Error 2
+
+
+
+Determining if the function strupr exists failed with the following output:
+Change Dir: /home/dewe/ViZDoom/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make cmTC_2fab5/fast && /usr/bin/make -f CMakeFiles/cmTC_2fab5.dir/build.make CMakeFiles/cmTC_2fab5.dir/build
+make[1]: Entering directory '/home/dewe/ViZDoom/build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_2fab5.dir/CheckFunctionExists.c.o
+/usr/bin/cc   -Wall -Wextra -Wno-unused -Wno-unused-parameter -Wno-missing-field-initializers -Wno-unused-result   -DCHECK_FUNCTION_EXISTS=strupr   -o CMakeFiles/cmTC_2fab5.dir/CheckFunctionExists.c.o   -c /usr/share/cmake-3.16/Modules/CheckFunctionExists.c
+Linking C executable cmTC_2fab5
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_2fab5.dir/link.txt --verbose=1
+/usr/bin/cc -Wall -Wextra -Wno-unused -Wno-unused-parameter -Wno-missing-field-initializers -Wno-unused-result   -DCHECK_FUNCTION_EXISTS=strupr    CMakeFiles/cmTC_2fab5.dir/CheckFunctionExists.c.o  -o cmTC_2fab5 
+/usr/bin/ld: CMakeFiles/cmTC_2fab5.dir/CheckFunctionExists.c.o: in function `main':
+CheckFunctionExists.c:(.text+0x14): undefined reference to `strupr'
+collect2: error: ld returned 1 exit status
+make[1]: *** [CMakeFiles/cmTC_2fab5.dir/build.make:87: cmTC_2fab5] Error 1
+make[1]: Leaving directory '/home/dewe/ViZDoom/build/CMakeFiles/CMakeTmp'
+make: *** [Makefile:121: cmTC_2fab5/fast] Error 2
+
+
+
+Determining if the function stricmp exists failed with the following output:
+Change Dir: /home/dewe/ViZDoom/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make cmTC_5a947/fast && /usr/bin/make -f CMakeFiles/cmTC_5a947.dir/build.make CMakeFiles/cmTC_5a947.dir/build
+make[1]: Entering directory '/home/dewe/ViZDoom/build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_5a947.dir/CheckFunctionExists.c.o
+/usr/bin/cc   -Wall -Wextra -Wno-unused -Wno-unused-parameter -Wno-missing-field-initializers -Wno-unused-result   -DCHECK_FUNCTION_EXISTS=stricmp   -o CMakeFiles/cmTC_5a947.dir/CheckFunctionExists.c.o   -c /usr/share/cmake-3.16/Modules/CheckFunctionExists.c
+Linking C executable cmTC_5a947
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_5a947.dir/link.txt --verbose=1
+/usr/bin/cc -Wall -Wextra -Wno-unused -Wno-unused-parameter -Wno-missing-field-initializers -Wno-unused-result   -DCHECK_FUNCTION_EXISTS=stricmp    CMakeFiles/cmTC_5a947.dir/CheckFunctionExists.c.o  -o cmTC_5a947 
+/usr/bin/ld: CMakeFiles/cmTC_5a947.dir/CheckFunctionExists.c.o: in function `main':
+CheckFunctionExists.c:(.text+0x14): undefined reference to `stricmp'
+collect2: error: ld returned 1 exit status
+make[1]: *** [CMakeFiles/cmTC_5a947.dir/build.make:87: cmTC_5a947] Error 1
+make[1]: Leaving directory '/home/dewe/ViZDoom/build/CMakeFiles/CMakeTmp'
+make: *** [Makefile:121: cmTC_5a947/fast] Error 2
+
+
+
+Determining if the function strnicmp exists failed with the following output:
+Change Dir: /home/dewe/ViZDoom/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make cmTC_e9198/fast && /usr/bin/make -f CMakeFiles/cmTC_e9198.dir/build.make CMakeFiles/cmTC_e9198.dir/build
+make[1]: Entering directory '/home/dewe/ViZDoom/build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_e9198.dir/CheckFunctionExists.c.o
+/usr/bin/cc   -Wall -Wextra -Wno-unused -Wno-unused-parameter -Wno-missing-field-initializers -Wno-unused-result   -DCHECK_FUNCTION_EXISTS=strnicmp   -o CMakeFiles/cmTC_e9198.dir/CheckFunctionExists.c.o   -c /usr/share/cmake-3.16/Modules/CheckFunctionExists.c
+Linking C executable cmTC_e9198
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_e9198.dir/link.txt --verbose=1
+/usr/bin/cc -Wall -Wextra -Wno-unused -Wno-unused-parameter -Wno-missing-field-initializers -Wno-unused-result   -DCHECK_FUNCTION_EXISTS=strnicmp    CMakeFiles/cmTC_e9198.dir/CheckFunctionExists.c.o  -o cmTC_e9198 
+/usr/bin/ld: CMakeFiles/cmTC_e9198.dir/CheckFunctionExists.c.o: in function `main':
+CheckFunctionExists.c:(.text+0x14): undefined reference to `strnicmp'
+collect2: error: ld returned 1 exit status
+make[1]: *** [CMakeFiles/cmTC_e9198.dir/build.make:87: cmTC_e9198] Error 1
+make[1]: Leaving directory '/home/dewe/ViZDoom/build/CMakeFiles/CMakeTmp'
+make: *** [Makefile:121: cmTC_e9198/fast] Error 2
+
+
+
