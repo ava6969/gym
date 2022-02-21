@@ -22,7 +22,7 @@ include_directories(third_party ${OPENGL_INCLUDE_DIR} ${THIRD_PARTY}/linux/ViZDo
 find_package(Catch2 CONFIG REQUIRED)
 find_package(box2d CONFIG REQUIRED)
 find_package(OpenGL REQUIRED)
-find_package(glfw3 3.3 REQUIRED)
+find_package(glfw3 3.3 )
 find_package(OpenCV REQUIRED )
 find_package(Torch REQUIRED)
 find_package(Boost COMPONENTS filesystem thread system date_time chrono regex fiber context REQUIRED)
