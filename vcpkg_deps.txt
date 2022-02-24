@@ -1,0 +1,14 @@
+catch2
+box2d
+opengl
+glfw3
+opencv
+boost-filesystem
+boost-thread
+boost-system
+boost-date-time
+boost-chrono
+boost-regex
+boost-fiber
+boost-context
+pybind11
