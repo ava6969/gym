@@ -18,6 +18,7 @@ cd ~
 git clone https://github.com/microsoft/vcpkg
 ./vcpkg/bootstrap-vcpkg.sh
 ```
+If any permission errors are encountered, try appending `sudo` in front of each command (e.g. `sudo make` instead of `make`).
 
 ### [LibTorch (PyTorch)](https://pytorch.org/)
 PyTorch provides deep learning functionality. A comprehensive installation guide can be found [here.](https://github.com/microsoft/vcpkg) Alternatively, paste the lines below into your terminal:
@@ -26,6 +27,19 @@ cd ~
 wget https://download.pytorch.org/libtorch/nightly/cpu/libtorch-shared-with-deps-latest.zip
 unzip libtorch-shared-with-deps-latest.zip
 ```
+If any permission errors are encountered, try appending `sudo` in front of each command (e.g. `sudo make` instead of `make`).
+
+### [Arcade Learning Environment](https://github.com/mgbellemare/Arcade-Learning-Environment)
+ALE provides Atari emulation. A comprehensive installation guide can be found [here.](https://github.com/mgbellemare/Arcade-Learning-Environment) Alternatively, paste the lines below into your terminal:
+```
+cd ~
+git clone https://github.com/mgbellemare/Arcade-Learning-Environment.git
+cd Arcade-Learning-Environment
+mkdir build && cd build
+cmake ../ -DCMAKE_BUILD_TYPE=Release
+cmake --build . --target install
+```
+If any permission errors are encountered, try appending `sudo` in front of each command (e.g. `sudo make` instead of `make`).
 
 ## Setting up Gym
 Before getting started, it should be known that this library has been primarily tested and built in a Linux environment, so directly building on a Windows system is inadvisable. If you are using Windows, it's best to use [WSL (Version 2)](https://docs.microsoft.com/en-us/windows/wsl/install), plus a XWindow package like [MobaXTerm](https://mobaxterm.mobatek.net/).
@@ -42,6 +56,8 @@ sudo apt-get install bison
 ```
 Build the library:
 ```
+export TORCH_Dir=~/libtorch
+export CXXFLAGS=-isystem\ /usr/local/include/ale
 mkdir /cmake-build-debug/
 cd cmake-build-debug
 cmake -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DCMAKE_MAKE_PROGRAM=make ..

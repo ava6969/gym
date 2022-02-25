@@ -12,3 +12,4 @@ boost-regex
 boost-fiber
 boost-context
 pybind11
+eigen3
