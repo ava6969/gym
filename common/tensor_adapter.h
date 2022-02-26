@@ -41,6 +41,8 @@ namespace gym{
         template<class T> static
         torch::Tensor encode(T && x);
 
+        static torch::Tensor encode(torch::Tensor && x) { return x; }
+
         static TensorDict
         encode(std::unordered_map<std::string, DMObservation> const &x, std::unordered_map<char, int> tokenizer = {});
 

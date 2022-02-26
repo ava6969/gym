@@ -13,15 +13,37 @@ namespace gym {
 
     template<class VenvT, bool dict>
     class VecNormAndPermute : public VecEnvWrapper<VenvT, dict> {
-
+        std::vector<std::string> key;
     public:
         explicit VecNormAndPermute(std::unique_ptr <VenvT> env) : VecEnvWrapper<VenvT, dict> ( std::move(env)){
-            this->m_ActionSpace = this->venv->actionSpace();
-            std::vector<int64_t> sz = this->venv->observationSpace()->size();
-            auto channel = sz.back();
-            sz[2] = sz[0];
-            sz[0] = channel;
-            this->m_ObservationSpace = gym::makeBoxSpace<float>(0, 1, sz );
+            this->m_ActionSpace = this->actionSpace();
+            auto _space = this->observationSpace();
+
+            if( ADict* ptr = _space->template as<ADict>()){
+                auto namedSpaces =  ptr->namedSpaces();
+                NamedSpaces _newSpaces;
+
+                for(auto const& [name, space_] : namedSpaces ){
+                    if(space_->size().size() == 3){
+                        std::vector<int64_t> sz = space_->size();
+                        auto channel = sz.back();
+                        sz[2] = sz[0];
+                        sz[0] = channel;
+                        key.push_back(name);
+                        _newSpaces[name] = gym::makeBoxSpace<float>(0, 1, sz );
+                    }else{
+                        _newSpaces[name] = space_->clone();
+                    }
+                }
+
+                this->m_ObservationSpace = gym::makeDictionarySpace( std::move(_newSpaces) );
+            }else{
+                auto sz = this->observationSpace()->size();
+                auto channel = sz.back();
+                sz[2] = sz[0];
+                sz[0] = channel;
+                this->m_ObservationSpace = gym::makeBoxSpace<float>(0, 1, sz );
+            }
         }
 
         explicit VecNormAndPermute(std::shared_ptr <Space> obsSpace, std::shared_ptr <Space> actSpace) :
@@ -32,8 +54,8 @@ namespace gym {
         }
 
         [[nodiscard]] inline auto observation(::TensorDict x) const noexcept {
-            for(auto& [k, v] : x)
-                v = v.permute({0, 3, 1, 2}) / 255;
+            for(auto& k : key)
+                x[k] = x[k].permute({0, 3, 1, 2}) / 255;
             return x;
         }
 
@@ -44,8 +66,8 @@ namespace gym {
         inline infer_type<dict> reset(int index) override {
             auto obs = this->venv->reset(index);
             if constexpr(dict){
-                for(auto& [k, v] : obs)
-                    v = v.unsqueeze(0).permute({0, 3, 1, 2}) / 255;
+                for(auto& k : key)
+                    obs[k] = obs[k].unsqueeze(0).permute({0, 3, 1, 2}) / 255;
                 return obs;
             }else{
                 return observation( obs.unsqueeze(0));

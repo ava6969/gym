@@ -26,7 +26,8 @@ namespace gym::space{
         {}
 
         Box(vector<Range<T > > range, Shape const& shape);
-
+        Box(Box&&)=default;
+        Box(Box const&)=default;
         Box(Shape const& shape): Space(shape),
         m_Range({Range<T>{std::numeric_limits<T>::min(),
                         std::numeric_limits<T>::max()}})
