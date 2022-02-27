@@ -42,7 +42,6 @@ namespace gym {
     template<>
     void TensorAdapter::decode(torch::Tensor const& v, std::vector<int>& out) {
         const auto N = v.size(0);
-//        out.resize(N);
         assert(N == out.size());
         std::memcpy(out.data(), v.cpu().toType(torch::kInt).data_ptr<int>(), sizeof(int) * N);
     }

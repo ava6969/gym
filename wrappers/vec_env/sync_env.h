@@ -133,6 +133,7 @@ namespace gym{
         }
 
         inline typename VecEnv<dict>::StepT step(int index, torch::Tensor const& action) noexcept override{
+            m_Actions[index].resize(action.size(0));
             TensorAdapter::decode< typename EnvType::ActionT >(action, m_Actions[index]);
             stepPerWorker(envs[index], index);
             infer_type<dict> out;
