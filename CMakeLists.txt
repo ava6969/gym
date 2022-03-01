@@ -28,6 +28,7 @@ find_package(Torch REQUIRED)
 find_package(Boost COMPONENTS filesystem thread system date_time chrono regex fiber context REQUIRED)
 find_package(Threads REQUIRED)
 find_package(pybind11 CONFIG REQUIRED)
+find_package(SDL2 CONFIG REQUIRED)
 
 set(DEPENDENCIES ${Boost_LIBRARIES}
 		Catch2::Catch2 OpenGL::GL glfw box2d::box2d
