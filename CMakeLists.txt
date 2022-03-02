@@ -25,7 +25,7 @@ find_package(OpenGL REQUIRED)
 find_package(glfw3 3.3 )
 find_package(OpenCV  4.0.0 REQUIRED )
 find_package(Torch REQUIRED)
-find_package(Boost COMPONENTS filesystem thread system date_time chrono regex fiber context REQUIRED)
+find_package(Boost NO_MODULE COMPONENTS filesystem thread system date_time chrono regex   REQUIRED)
 find_package(Threads REQUIRED)
 
 add_subdirectory(third_party/pybind11)
@@ -80,4 +80,26 @@ if(${BUILD_TEST})
 	target_include_directories(GymTest PRIVATE .)
 endif()
 
+function(print_target_properties tgt)
+	if(NOT TARGET ${tgt})
+		message("There is no target named '${tgt}'")
+		return()
+	endif()
 
+	# this list of properties can be extended as needed
+	set(CMAKE_PROPERTY_LIST SOURCE_DIR BINARY_DIR COMPILE_DEFINITIONS
+			COMPILE_OPTIONS INCLUDE_DIRECTORIES LINK_LIBRARIES)
+
+	message("Configuration for target ${tgt}")
+
+	foreach (prop ${CMAKE_PROPERTY_LIST})
+		get_property(propval TARGET ${tgt} PROPERTY ${prop} SET)
+		if (propval)
+			get_target_property(propval ${tgt} ${prop})
+			message (STATUS "${prop} = ${propval}")
+		endif()
+	endforeach(prop)
+
+endfunction(print_target_properties)
+
+print_target_properties(gym)
