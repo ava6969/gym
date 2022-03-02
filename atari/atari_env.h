@@ -7,7 +7,7 @@
 #include <variant>
 #include "env.h"
 #include "filesystem"
-#include <opencv4/opencv2/opencv.hpp>
+#include "opencv2/opencv.hpp"
 #include "vector"
 #include "array"
 #include <unordered_set>

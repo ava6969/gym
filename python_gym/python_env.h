@@ -8,7 +8,7 @@
 #include <pybind11/embed.h>
 #include <pybind11/numpy.h>
 #include <boost/algorithm/string/predicate.hpp>
-#include "opencv4/opencv2/opencv.hpp"
+#include "opencv2/opencv.hpp"
 #include "boost/algorithm/string.hpp"
 
 namespace py = pybind11;
