@@ -6,7 +6,7 @@
 #define GYMENV_WARP_FRAME_H
 
 #include "common/wrapper.h"
-#include "atari/atari_env.h"
+//#include "atari/atari_env.h"
 
 
 namespace gym {

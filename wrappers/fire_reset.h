@@ -6,7 +6,7 @@
 #define GYMENV_FIRE_RESET_H
 
 #include "common/wrapper.h"
-#include "atari/atari_env.h"
+//#include "atari/atari_env.h"
 
 namespace gym {
     struct FireResetEnv : public Wrapper< ObsT<true>, int> {

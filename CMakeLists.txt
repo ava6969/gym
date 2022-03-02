@@ -29,7 +29,6 @@ find_package(Boost COMPONENTS filesystem thread system date_time chrono regex fi
 find_package(Threads REQUIRED)
 add_subdirectory(third_party/pybind11)
 
-
 set(DEPENDENCIES ${Boost_LIBRARIES}  ${ALE_LIB}
 		Catch2::Catch2 OpenGL::GL glfw box2d::box2d
 		${OpenCV_LIBS} ${TORCH_LIBRARIES} ${LIBVIZDOOM}  ${CMAKE_THREAD_LIBS_INIT}
@@ -51,7 +50,10 @@ add_subdirectory(common)
 add_subdirectory(spaces)
 add_subdirectory(classic_control)
 add_subdirectory(wrappers)
-add_subdirectory(atari)
+
+if(${ADD_ATARI})
+	add_subdirectory(atari)
+endif()
 
 if(${ADD_BOX2D})
 	add_subdirectory(box2d)

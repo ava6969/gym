@@ -7,6 +7,8 @@
 
 #include "base.h"
 #include "common/tensor_adapter.h"
+#include "torch/torch.h"
+
 namespace gym{
 
     template<bool dict>
@@ -133,16 +135,16 @@ namespace gym{
         }
 
         inline typename VecEnv<dict>::StepT step(int index, torch::Tensor const& action) noexcept override{
-            m_Actions[index].resize(action.size(0));
-            TensorAdapter::decode< typename EnvType::ActionT >(action, m_Actions[index]);
-            stepPerWorker(envs[index], index);
+//            m_Actions[index].resize(action.size(0)); FIX FOR IMPALA
+//            TensorAdapter::decode< typename EnvType::ActionT >(action, m_Actions[index]);
+//            stepPerWorker(envs[index], index);
             infer_type<dict> out;
-            if constexpr(dict){
-                for (auto const& [k, v]: m_BufObs ) {
-                    out[k] = v[index];
-                }
-            } else
-                out = m_BufObs[index];
+//            if constexpr(dict){
+//                for (auto const& [k, v]: m_BufObs ) {
+//                    out[k] = v[index];
+//                }
+//            } else
+//                out = m_BufObs[index];
 
             return { out,
                      torch::tensor( this->m_BufRews[index] ).unsqueeze(-1),

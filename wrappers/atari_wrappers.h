@@ -15,7 +15,6 @@
 #include "max_skip.h"
 #include "warp_frame.h"
 #include "clip_reward.h"
-#include "atari/atari_env.h"
 #include "gym_.h"
 #include "wrappers/vec_env/vec_atari.h"
 
