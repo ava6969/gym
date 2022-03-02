@@ -29,7 +29,8 @@ find_package(Boost COMPONENTS filesystem thread system date_time chrono regex fi
 find_package(Threads REQUIRED)
 find_package(pybind11 CONFIG REQUIRED)
 
-set(DEPENDENCIES ${Boost_LIBRARIES}
+
+set(DEPENDENCIES ${Boost_LIBRARIES}  ${ALE_LIB}
 		Catch2::Catch2 OpenGL::GL glfw box2d::box2d
 		${OpenCV_LIBS} ${TORCH_LIBRARIES} ${LIBVIZDOOM}  ${CMAKE_THREAD_LIBS_INIT}
 		pybind11::embed)
@@ -42,7 +43,7 @@ set(GYM_TEST_FILES test/classic_control.cpp
 add_library(gym STATIC "" common/tensor_adapter.cpp custom/dm_lab/lab.cpp)
 
 target_link_libraries(gym PRIVATE ${DEPENDENCIES})
-target_include_directories(gym PRIVATE . ale)
+target_include_directories(gym PRIVATE . )
 target_compile_options(gym PRIVATE -fvisibility=hidden)
 set_target_properties(gym PROPERTIES CXX_VISIBILITY_PRESET "hidden" CUDA_VISIBILITY_PRESET "hidden")
 
@@ -50,13 +51,10 @@ add_subdirectory(common)
 add_subdirectory(spaces)
 add_subdirectory(classic_control)
 add_subdirectory(wrappers)
+add_subdirectory(atari)
 
 if(${ADD_BOX2D})
 	add_subdirectory(box2d)
-endif()
-
-if(${ADD_ATARI})
-	add_subdirectory(atari)
 endif()
 
 #add_subdirectory(custom)
