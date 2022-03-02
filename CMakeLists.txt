@@ -27,7 +27,7 @@ find_package(OpenCV REQUIRED )
 find_package(Torch REQUIRED)
 find_package(Boost COMPONENTS filesystem thread system date_time chrono regex fiber context REQUIRED)
 find_package(Threads REQUIRED)
-find_package(pybind11 CONFIG REQUIRED)
+add_subdirectory(third_party/pybind11)
 
 
 set(DEPENDENCIES ${Boost_LIBRARIES}  ${ALE_LIB}
