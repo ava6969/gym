@@ -1,2 +1,0 @@
-/usr/bin/ar qc libgdtoa.a  CMakeFiles/gdtoa.dir/dmisc.c.o CMakeFiles/gdtoa.dir/dtoa.c.o CMakeFiles/gdtoa.dir/misc.c.o
-/usr/bin/ranlib libgdtoa.a

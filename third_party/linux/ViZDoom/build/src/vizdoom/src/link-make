@@ -1,1 +1,0 @@
-if [ ! -e /home/dewe/ViZDoom/build/bin/vizdoom ]; then ln -sf /home/dewe/ViZDoom/build/src/vizdoom/src/vizdoom /home/dewe/ViZDoom/build/bin/vizdoom; fi

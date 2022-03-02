@@ -17,7 +17,7 @@ set(BUILD_TEST ON)
 option(ADD_BOX2D OFF)
 option(ADD_ATARI OFF)
 
-include_directories(third_party ${OPENGL_INCLUDE_DIR} ${THIRD_PARTY}/linux/ViZDoom/include)
+include_directories(third_party ${OPENGL_INCLUDE_DIR} ${THIRD_PARTY}/viz_doom/include)
 
 find_package(Catch2 CONFIG REQUIRED)
 find_package(box2d CONFIG REQUIRED)
@@ -28,13 +28,11 @@ find_package(Torch REQUIRED)
 find_package(Boost COMPONENTS filesystem thread system date_time chrono regex fiber context REQUIRED)
 find_package(Threads REQUIRED)
 find_package(pybind11 CONFIG REQUIRED)
-find_package(SDL2 CONFIG REQUIRED)
 
 set(DEPENDENCIES ${Boost_LIBRARIES}
 		Catch2::Catch2 OpenGL::GL glfw box2d::box2d
 		${OpenCV_LIBS} ${TORCH_LIBRARIES} ${LIBVIZDOOM}  ${CMAKE_THREAD_LIBS_INIT}
-		pybind11::embed
-		)
+		pybind11::embed)
 
 set(GYM_TEST_FILES test/classic_control.cpp
 		 test/atari_env.cpp test/wrappers.cpp

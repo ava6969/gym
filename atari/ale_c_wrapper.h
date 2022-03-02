@@ -1,7 +1,7 @@
 #ifndef __ALE_C_WRAPPER_H__
 #define __ALE_C_WRAPPER_H__
 
-#include "ale/ale_interface.hpp"
+#include "ale_interface.hpp"
 
 extern "C" {
   // Declares int rgb_palette[256]
