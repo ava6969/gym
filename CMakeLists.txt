@@ -40,10 +40,13 @@ set(GYM_TEST_FILES test/classic_control.cpp
 #		test/box_world.cpp  test/rendering.cpp test/spaces.cpp
 		)
 
+message(STATUS "TORCH_LIBRARIES: ${TORCH_LIBRARIES}")
+message(STATUS "TORCH_INCLUDE_DIRS: ${TORCH_INCLUDE_DIRS}")
+
 add_library(gym STATIC "" common/tensor_adapter.cpp custom/dm_lab/lab.cpp)
 
 target_link_libraries(gym PRIVATE ${DEPENDENCIES})
-target_include_directories(gym PRIVATE . )
+target_include_directories(gym PRIVATE .  ${TORCH_INCLUDE_DIRS})
 target_compile_options(gym PRIVATE -fvisibility=hidden)
 set_target_properties(gym PROPERTIES CXX_VISIBILITY_PRESET "hidden" CUDA_VISIBILITY_PRESET "hidden")
 
@@ -72,7 +75,7 @@ install (FILES env.h DESTINATION include/gym )
 
 add_executable(gym_main main.cpp)
 target_link_libraries(gym_main PRIVATE ${DEPENDENCIES} gym)
-target_include_directories(gym_main PRIVATE .)
+target_include_directories(gym_main PRIVATE . )
 
 if(${BUILD_TEST})
 	add_executable(GymTest ${GYM_TEST_FILES})
