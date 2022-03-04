@@ -1,0 +1,165 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"childIndexes" : 
+					[
+						1,
+						2,
+						3,
+						4,
+						5,
+						6
+					],
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-.-RelWithDebInfo-a729874cabdb586b15fc.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.17"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2
+					]
+				},
+				{
+					"build" : "common",
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-common-RelWithDebInfo-15bc925809dbac4dc4ca.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.17"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "common"
+				},
+				{
+					"build" : "spaces",
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-spaces-RelWithDebInfo-42a7cc1da6bb06e7ee67.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.17"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "spaces"
+				},
+				{
+					"build" : "classic_control",
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-classic_control-RelWithDebInfo-b57ad8b7cd62d291fb85.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.17"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "classic_control"
+				},
+				{
+					"build" : "wrappers",
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-wrappers-RelWithDebInfo-cbe862f4cbf8aa4e5eec.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.17"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "wrappers"
+				},
+				{
+					"build" : "atari",
+					"jsonFile" : "directory-atari-RelWithDebInfo-0be55e4c7306056cb86b.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.17"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "atari"
+				},
+				{
+					"build" : "python_gym",
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-python_gym-RelWithDebInfo-23bfbaac1337df412e9e.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.17"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "python_gym"
+				}
+			],
+			"name" : "RelWithDebInfo",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4,
+						5,
+						6
+					],
+					"name" : "gym",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "GymTest::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-GymTest-RelWithDebInfo-9d6c2fc5399b6c6ca8d8.json",
+					"name" : "GymTest",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "gym::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-gym-RelWithDebInfo-4c6fcc1d2fb02e540deb.json",
+					"name" : "gym",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "gym_main::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-gym_main-RelWithDebInfo-6787c3a4a26fe891a6f3.json",
+					"name" : "gym_main",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/home/dewe/sam/gym/cmake-build-relwithdebinfo",
+		"source" : "/home/dewe/sam/gym"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 3
+	}
+}

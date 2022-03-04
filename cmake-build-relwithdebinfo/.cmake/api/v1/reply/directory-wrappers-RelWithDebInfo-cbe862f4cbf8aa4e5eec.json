@@ -1,0 +1,52 @@
+{
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"install"
+		],
+		"files" : 
+		[
+			"wrappers/CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 3,
+				"parent" : 0
+			}
+		]
+	},
+	"installers" : 
+	[
+		{
+			"backtrace" : 1,
+			"component" : "Unspecified",
+			"destination" : "include/gym/wrappers",
+			"paths" : 
+			[
+				"wrappers/atari_wrappers.h",
+				"wrappers/clip_action.h",
+				"wrappers/clip_reward.h",
+				"wrappers/episodic_life.h",
+				"wrappers/fire_reset.h",
+				"wrappers/max_skip.h",
+				"wrappers/monitor.h",
+				"wrappers/noop_reset.h",
+				"wrappers/time_limit.h",
+				"wrappers/warp_frame.h"
+			],
+			"type" : "file"
+		}
+	],
+	"paths" : 
+	{
+		"build" : "wrappers",
+		"source" : "wrappers"
+	}
+}

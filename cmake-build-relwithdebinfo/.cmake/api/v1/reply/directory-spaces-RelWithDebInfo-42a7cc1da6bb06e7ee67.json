@@ -1,0 +1,50 @@
+{
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"install"
+		],
+		"files" : 
+		[
+			"spaces/CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 3,
+				"parent" : 0
+			}
+		]
+	},
+	"installers" : 
+	[
+		{
+			"backtrace" : 1,
+			"component" : "Unspecified",
+			"destination" : "include/gym/spaces",
+			"paths" : 
+			[
+				"spaces/box.h",
+				"spaces/dict.h",
+				"spaces/discrete.h",
+				"spaces/multi_discrete.h",
+				"spaces/space.h",
+				"spaces/util.h",
+				"spaces/box.tpp",
+				"spaces/util.tpp"
+			],
+			"type" : "file"
+		}
+	],
+	"paths" : 
+	{
+		"build" : "spaces",
+		"source" : "spaces"
+	}
+}

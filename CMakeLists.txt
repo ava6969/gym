@@ -18,6 +18,7 @@ option(ADD_BOX2D OFF)
 option(ADD_ATARI OFF)
 
 include_directories(third_party ${OPENGL_INCLUDE_DIR} ${THIRD_PARTY}/viz_doom/include)
+add_subdirectory(third_party/pybind11)
 
 find_package(Catch2 CONFIG REQUIRED)
 find_package(box2d CONFIG REQUIRED)
@@ -27,8 +28,6 @@ find_package(OpenCV  4.0.0 REQUIRED )
 find_package(Torch REQUIRED)
 find_package(Boost NO_MODULE COMPONENTS filesystem thread system date_time chrono regex   REQUIRED)
 find_package(Threads REQUIRED)
-
-add_subdirectory(third_party/pybind11)
 
 set(DEPENDENCIES ${Boost_LIBRARIES}  ${ALE_LIB}
 		Catch2::Catch2 OpenGL::GL glfw box2d::box2d
