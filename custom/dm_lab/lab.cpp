@@ -2,7 +2,7 @@
 // Created by dewe on 10/30/21.
 //
 
-#include "opencv4/opencv2/opencv.hpp"
+#include "opencv2/opencv.hpp"
 #include "lab.h"
 
 namespace gym{
