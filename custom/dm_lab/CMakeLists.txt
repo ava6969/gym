@@ -1,4 +1,6 @@
-target_sources(gym PRIVATE base_lab.cpp dm_lab.cpp dm_loader.cpp)
+
+target_sources(gym PRIVATE base_lab.cpp dm_lab.cpp dm_loader.cpp lab.cpp)
+
 
 FILE(GLOB HEADERS *h)
 install (FILES ${HEADERS} DESTINATION include/gym/custom/dm_lab)

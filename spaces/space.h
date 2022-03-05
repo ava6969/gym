@@ -15,6 +15,8 @@ namespace gym::space{
     class Space;
     using Spaces   = std::vector<gym::space::Space*>;
     using SpaceMap   = std::map<std::string, Space*>;
+    using SpaceHolder = std::shared_ptr<gym::space::Space>;
+
     class Space{
 
     protected:

@@ -23,68 +23,8 @@ ADD_BOX2D:BOOL=OFF
 //No help, variable specified on the command line.
 BUILD_EXAMPLES:UNINITIALIZED=OFF
 
-//Boost atomic library (debug)
-Boost_ATOMIC_LIBRARY_DEBUG:FILEPATH=/home/dewe/vcpkg/installed/x64-linux/lib/libboost_atomic.a
-
-//Boost atomic library (release)
-Boost_ATOMIC_LIBRARY_RELEASE:FILEPATH=/home/dewe/vcpkg/installed/x64-linux/lib/libboost_atomic.a
-
-//Boost chrono library (debug)
-Boost_CHRONO_LIBRARY_DEBUG:FILEPATH=/home/dewe/vcpkg/installed/x64-linux/lib/libboost_chrono.a
-
-//Boost chrono library (release)
-Boost_CHRONO_LIBRARY_RELEASE:FILEPATH=/home/dewe/vcpkg/installed/x64-linux/lib/libboost_chrono.a
-
-//Boost context library (debug)
-Boost_CONTEXT_LIBRARY_DEBUG:FILEPATH=/home/dewe/vcpkg/installed/x64-linux/lib/libboost_context.a
-
-//Boost context library (release)
-Boost_CONTEXT_LIBRARY_RELEASE:FILEPATH=/home/dewe/vcpkg/installed/x64-linux/lib/libboost_context.a
-
-//Boost date_time library (debug)
-Boost_DATE_TIME_LIBRARY_DEBUG:FILEPATH=/home/dewe/vcpkg/installed/x64-linux/lib/libboost_date_time.a
-
-//Boost date_time library (release)
-Boost_DATE_TIME_LIBRARY_RELEASE:FILEPATH=/home/dewe/vcpkg/installed/x64-linux/lib/libboost_date_time.a
-
-//Boost fiber library (debug)
-Boost_FIBER_LIBRARY_DEBUG:FILEPATH=/home/dewe/vcpkg/installed/x64-linux/lib/libboost_fiber.a
-
-//Boost fiber library (release)
-Boost_FIBER_LIBRARY_RELEASE:FILEPATH=/home/dewe/vcpkg/installed/x64-linux/lib/libboost_fiber.a
-
-//Boost filesystem library (debug)
-Boost_FILESYSTEM_LIBRARY_DEBUG:FILEPATH=/home/dewe/vcpkg/installed/x64-linux/lib/libboost_filesystem.a
-
-//Boost filesystem library (release)
-Boost_FILESYSTEM_LIBRARY_RELEASE:FILEPATH=/home/dewe/vcpkg/installed/x64-linux/lib/libboost_filesystem.a
-
-//Path to a file.
-Boost_INCLUDE_DIR:PATH=/home/dewe/vcpkg/installed/x64-linux/include
-
-//Boost library directory DEBUG
-Boost_LIBRARY_DIR_DEBUG:PATH=/home/dewe/vcpkg/installed/x64-linux/lib
-
-//Boost library directory RELEASE
-Boost_LIBRARY_DIR_RELEASE:PATH=/home/dewe/vcpkg/installed/x64-linux/lib
-
-//Boost regex library (debug)
-Boost_REGEX_LIBRARY_DEBUG:FILEPATH=/home/dewe/vcpkg/installed/x64-linux/lib/libboost_regex.a
-
-//Boost regex library (release)
-Boost_REGEX_LIBRARY_RELEASE:FILEPATH=/home/dewe/vcpkg/installed/x64-linux/lib/libboost_regex.a
-
-//Boost system library (debug)
-Boost_SYSTEM_LIBRARY_DEBUG:FILEPATH=/home/dewe/vcpkg/installed/x64-linux/lib/libboost_system.a
-
-//Boost system library (release)
-Boost_SYSTEM_LIBRARY_RELEASE:FILEPATH=/home/dewe/vcpkg/installed/x64-linux/lib/libboost_system.a
-
-//Boost thread library (debug)
-Boost_THREAD_LIBRARY_DEBUG:FILEPATH=/home/dewe/vcpkg/installed/x64-linux/lib/libboost_thread.a
-
-//Boost thread library (release)
-Boost_THREAD_LIBRARY_RELEASE:FILEPATH=/home/dewe/vcpkg/installed/x64-linux/lib/libboost_thread.a
+//The directory containing a CMake configuration file for Boost.
+Boost_DIR:PATH=/usr/lib/x86_64-linux-gnu/cmake/Boost-1.71.0
 
 //Path to a library.
 C10_CUDA_LIBRARY:FILEPATH=/home/dewe/libtorch/lib/libc10_cuda.so
@@ -100,7 +40,7 @@ CMAKE_AR:FILEPATH=/usr/bin/ar
 CMAKE_BUILD_TYPE:STRING=RelWithDebInfo
 
 //CXX compiler
-CMAKE_CXX_COMPILER:STRING=/usr/local/bin/g++
+CMAKE_CXX_COMPILER:STRING=/usr/bin/g++-11
 
 //A wrapper around 'ar' adding the appropriate '--plugin' option
 // for the GCC compiler
@@ -126,7 +66,7 @@ CMAKE_CXX_FLAGS_RELEASE:STRING=-O3 -DNDEBUG
 CMAKE_CXX_FLAGS_RELWITHDEBINFO:STRING=-O2 -g -DNDEBUG
 
 //C compiler
-CMAKE_C_COMPILER:STRING=/usr/local/bin/gcc
+CMAKE_C_COMPILER:STRING=/usr/bin/gcc-11
 
 //A wrapper around 'ar' adding the appropriate '--plugin' option
 // for the GCC compiler
@@ -172,8 +112,56 @@ CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO:STRING=
 //Enable/Disable output of compile commands during generation.
 CMAKE_EXPORT_COMPILE_COMMANDS:BOOL=
 
+//User executables (bin)
+CMAKE_INSTALL_BINDIR:PATH=bin
+
+//Read-only architecture-independent data (DATAROOTDIR)
+CMAKE_INSTALL_DATADIR:PATH=
+
+//Read-only architecture-independent data root (share)
+CMAKE_INSTALL_DATAROOTDIR:PATH=share
+
+//Documentation root (DATAROOTDIR/doc/PROJECT_NAME)
+CMAKE_INSTALL_DOCDIR:PATH=
+
+//C header files (include)
+CMAKE_INSTALL_INCLUDEDIR:PATH=include
+
+//Info documentation (DATAROOTDIR/info)
+CMAKE_INSTALL_INFODIR:PATH=
+
+//Object code libraries (lib)
+CMAKE_INSTALL_LIBDIR:PATH=lib
+
+//Program executables (libexec)
+CMAKE_INSTALL_LIBEXECDIR:PATH=libexec
+
+//Locale-dependent data (DATAROOTDIR/locale)
+CMAKE_INSTALL_LOCALEDIR:PATH=
+
+//Modifiable single-machine data (var)
+CMAKE_INSTALL_LOCALSTATEDIR:PATH=var
+
+//Man documentation (DATAROOTDIR/man)
+CMAKE_INSTALL_MANDIR:PATH=
+
+//C header files for non-gcc (/usr/include)
+CMAKE_INSTALL_OLDINCLUDEDIR:PATH=/usr/include
+
 //Install path prefix, prepended onto install directories.
 CMAKE_INSTALL_PREFIX:PATH=/usr/local
+
+//Run-time variable data (LOCALSTATEDIR/run)
+CMAKE_INSTALL_RUNSTATEDIR:PATH=
+
+//System admin executables (sbin)
+CMAKE_INSTALL_SBINDIR:PATH=sbin
+
+//Modifiable architecture-independent data (com)
+CMAKE_INSTALL_SHAREDSTATEDIR:PATH=com
+
+//Read-only single-machine data (etc)
+CMAKE_INSTALL_SYSCONFDIR:PATH=etc
 
 //Path to a program.
 CMAKE_LINKER:FILEPATH=/usr/bin/ld
@@ -218,6 +206,21 @@ CMAKE_PROJECT_HOMEPAGE_URL:STATIC=
 
 //Value Computed by CMake
 CMAKE_PROJECT_NAME:STATIC=gym
+
+//Value Computed by CMake
+CMAKE_PROJECT_VERSION:STATIC=2.10.0
+
+//Value Computed by CMake
+CMAKE_PROJECT_VERSION_MAJOR:STATIC=2
+
+//Value Computed by CMake
+CMAKE_PROJECT_VERSION_MINOR:STATIC=10
+
+//Value Computed by CMake
+CMAKE_PROJECT_VERSION_PATCH:STATIC=0
+
+//Value Computed by CMake
+CMAKE_PROJECT_VERSION_TWEAK:STATIC=
 
 //Path to a program.
 CMAKE_RANLIB:FILEPATH=/usr/bin/ranlib
@@ -314,7 +317,7 @@ CUDA_GENERATED_OUTPUT_DIR:PATH=
 CUDA_HOST_COMPILATION_CPP:BOOL=ON
 
 //Host side compiler used by NVCC
-CUDA_HOST_COMPILER:FILEPATH=/usr/local/bin/gcc
+CUDA_HOST_COMPILER:FILEPATH=/usr/bin/gcc-11
 
 //Path to a program.
 CUDA_NVCC_EXECUTABLE:FILEPATH=/usr/local/cuda/bin/nvcc
@@ -486,17 +489,30 @@ OPENGL_xmesa_INCLUDE_DIR:PATH=OPENGL_xmesa_INCLUDE_DIR-NOTFOUND
 //The directory containing a CMake configuration file for OpenCV.
 OpenCV_DIR:PATH=/usr/lib/x86_64-linux-gnu/cmake/opencv4
 
+//Force new FindPython
+PYBIND11_FINDPYTHON:BOOL=OFF
+
+//Install pybind11 header files?
+PYBIND11_INSTALL:BOOL=OFF
+
+//Override the ABI version, may be used to enable the unstable
+// ABI.
+PYBIND11_INTERNALS_VERSION:STRING=
+
+//Disable search for Python
+PYBIND11_NOPYTHON:BOOL=OFF
+
 //Python version to use for compiling modules
 PYBIND11_PYTHON_VERSION:STRING=
+
+//Build pybind11 test suite?
+PYBIND11_TEST:BOOL=OFF
 
 //Path to a program.
 PYTHON_EXECUTABLE:FILEPATH=/usr/bin/python3
 
 //Path to a library.
 PYTHON_LIBRARY:FILEPATH=/usr/lib/x86_64-linux-gnu/libpython3.8.so
-
-//The directory containing a CMake configuration file for SDL2.
-SDL2_DIR:PATH=/home/dewe/vcpkg/installed/x64-linux/share/sdl2
 
 //Path to a library.
 TORCH_LIBRARY:FILEPATH=/home/dewe/libtorch/lib/libtorch.so
@@ -541,6 +557,30 @@ Z_VCPKG_CL:FILEPATH=Z_VCPKG_CL-NOTFOUND
 // triplet
 _VCPKG_INSTALLED_DIR:PATH=/home/dewe/vcpkg/installed
 
+//The directory containing a CMake configuration file for boost_atomic.
+boost_atomic_DIR:PATH=/usr/lib/x86_64-linux-gnu/cmake/boost_atomic-1.71.0
+
+//The directory containing a CMake configuration file for boost_chrono.
+boost_chrono_DIR:PATH=/usr/lib/x86_64-linux-gnu/cmake/boost_chrono-1.71.0
+
+//The directory containing a CMake configuration file for boost_date_time.
+boost_date_time_DIR:PATH=/usr/lib/x86_64-linux-gnu/cmake/boost_date_time-1.71.0
+
+//The directory containing a CMake configuration file for boost_filesystem.
+boost_filesystem_DIR:PATH=/usr/lib/x86_64-linux-gnu/cmake/boost_filesystem-1.71.0
+
+//The directory containing a CMake configuration file for boost_headers.
+boost_headers_DIR:PATH=/usr/lib/x86_64-linux-gnu/cmake/boost_headers-1.71.0
+
+//The directory containing a CMake configuration file for boost_regex.
+boost_regex_DIR:PATH=/usr/lib/x86_64-linux-gnu/cmake/boost_regex-1.71.0
+
+//The directory containing a CMake configuration file for boost_system.
+boost_system_DIR:PATH=/usr/lib/x86_64-linux-gnu/cmake/boost_system-1.71.0
+
+//The directory containing a CMake configuration file for boost_thread.
+boost_thread_DIR:PATH=/usr/lib/x86_64-linux-gnu/cmake/boost_thread-1.71.0
+
 //The directory containing a CMake configuration file for box2d.
 box2d_DIR:PATH=/home/dewe/vcpkg/installed/x64-linux/share/box2d
 
@@ -562,56 +602,20 @@ gym_SOURCE_DIR:STATIC=/home/dewe/sam/gym
 //Path to a library.
 kineto_LIBRARY:FILEPATH=/home/dewe/libtorch/lib/libkineto.a
 
-//The directory containing a CMake configuration file for pybind11.
-pybind11_DIR:PATH=/home/dewe/vcpkg/installed/x64-linux/share/pybind11
+//Value Computed by CMake
+pybind11_BINARY_DIR:STATIC=/home/dewe/sam/gym/cmake-build-relwithdebinfo/third_party/pybind11
+
+//Value Computed by CMake
+pybind11_IS_TOP_LEVEL:STATIC=OFF
+
+//Value Computed by CMake
+pybind11_SOURCE_DIR:STATIC=/home/dewe/sam/gym/third_party/pybind11
 
 
 ########################
 # INTERNAL cache entries
 ########################
 
-//ADVANCED property for variable: Boost_ATOMIC_LIBRARY_DEBUG
-Boost_ATOMIC_LIBRARY_DEBUG-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: Boost_ATOMIC_LIBRARY_RELEASE
-Boost_ATOMIC_LIBRARY_RELEASE-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: Boost_CHRONO_LIBRARY_DEBUG
-Boost_CHRONO_LIBRARY_DEBUG-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: Boost_CHRONO_LIBRARY_RELEASE
-Boost_CHRONO_LIBRARY_RELEASE-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: Boost_CONTEXT_LIBRARY_DEBUG
-Boost_CONTEXT_LIBRARY_DEBUG-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: Boost_CONTEXT_LIBRARY_RELEASE
-Boost_CONTEXT_LIBRARY_RELEASE-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: Boost_DATE_TIME_LIBRARY_DEBUG
-Boost_DATE_TIME_LIBRARY_DEBUG-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: Boost_DATE_TIME_LIBRARY_RELEASE
-Boost_DATE_TIME_LIBRARY_RELEASE-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: Boost_FIBER_LIBRARY_DEBUG
-Boost_FIBER_LIBRARY_DEBUG-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: Boost_FIBER_LIBRARY_RELEASE
-Boost_FIBER_LIBRARY_RELEASE-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: Boost_FILESYSTEM_LIBRARY_DEBUG
-Boost_FILESYSTEM_LIBRARY_DEBUG-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: Boost_FILESYSTEM_LIBRARY_RELEASE
-Boost_FILESYSTEM_LIBRARY_RELEASE-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: Boost_INCLUDE_DIR
-Boost_INCLUDE_DIR-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: Boost_LIBRARY_DIR_DEBUG
-Boost_LIBRARY_DIR_DEBUG-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: Boost_LIBRARY_DIR_RELEASE
-Boost_LIBRARY_DIR_RELEASE-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: Boost_REGEX_LIBRARY_DEBUG
-Boost_REGEX_LIBRARY_DEBUG-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: Boost_REGEX_LIBRARY_RELEASE
-Boost_REGEX_LIBRARY_RELEASE-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: Boost_SYSTEM_LIBRARY_DEBUG
-Boost_SYSTEM_LIBRARY_DEBUG-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: Boost_SYSTEM_LIBRARY_RELEASE
-Boost_SYSTEM_LIBRARY_RELEASE-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: Boost_THREAD_LIBRARY_DEBUG
-Boost_THREAD_LIBRARY_DEBUG-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: Boost_THREAD_LIBRARY_RELEASE
-Boost_THREAD_LIBRARY_RELEASE-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_ADDR2LINE
 CMAKE_ADDR2LINE-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_AR
@@ -695,8 +699,40 @@ CMAKE_HAVE_PTHREAD_H:INTERNAL=1
 //Source directory with the top level CMakeLists.txt file for this
 // project
 CMAKE_HOME_DIRECTORY:INTERNAL=/home/dewe/sam/gym
+//ADVANCED property for variable: CMAKE_INSTALL_BINDIR
+CMAKE_INSTALL_BINDIR-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CMAKE_INSTALL_DATADIR
+CMAKE_INSTALL_DATADIR-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CMAKE_INSTALL_DATAROOTDIR
+CMAKE_INSTALL_DATAROOTDIR-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CMAKE_INSTALL_DOCDIR
+CMAKE_INSTALL_DOCDIR-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CMAKE_INSTALL_INCLUDEDIR
+CMAKE_INSTALL_INCLUDEDIR-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CMAKE_INSTALL_INFODIR
+CMAKE_INSTALL_INFODIR-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CMAKE_INSTALL_LIBDIR
+CMAKE_INSTALL_LIBDIR-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CMAKE_INSTALL_LIBEXECDIR
+CMAKE_INSTALL_LIBEXECDIR-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CMAKE_INSTALL_LOCALEDIR
+CMAKE_INSTALL_LOCALEDIR-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CMAKE_INSTALL_LOCALSTATEDIR
+CMAKE_INSTALL_LOCALSTATEDIR-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CMAKE_INSTALL_MANDIR
+CMAKE_INSTALL_MANDIR-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CMAKE_INSTALL_OLDINCLUDEDIR
+CMAKE_INSTALL_OLDINCLUDEDIR-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CMAKE_INSTALL_RUNSTATEDIR
+CMAKE_INSTALL_RUNSTATEDIR-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CMAKE_INSTALL_SBINDIR
+CMAKE_INSTALL_SBINDIR-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CMAKE_INSTALL_SHAREDSTATEDIR
+CMAKE_INSTALL_SHAREDSTATEDIR-ADVANCED:INTERNAL=1
 //Install .so files without execute permission.
 CMAKE_INSTALL_SO_NO_EXE:INTERNAL=1
+//ADVANCED property for variable: CMAKE_INSTALL_SYSCONFDIR
+CMAKE_INSTALL_SYSCONFDIR-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_LINKER
 CMAKE_LINKER-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_MODULE_LINKER_FLAGS
@@ -712,7 +748,7 @@ CMAKE_MODULE_LINKER_FLAGS_RELWITHDEBINFO-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_NM
 CMAKE_NM-ADVANCED:INTERNAL=1
 //number of local generators
-CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=7
+CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=8
 //ADVANCED property for variable: CMAKE_OBJCOPY
 CMAKE_OBJCOPY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_OBJDUMP
@@ -862,20 +898,18 @@ CUDNN_INCLUDE_DIR-ADVANCED:INTERNAL=1
 CUDNN_LIBRARY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CUDNN_ROOT
 CUDNN_ROOT-ADVANCED:INTERNAL=1
-//Details about finding Boost
-FIND_PACKAGE_MESSAGE_DETAILS_Boost:INTERNAL=[/home/dewe/vcpkg/installed/x64-linux/include][cfound components: filesystem thread system date_time chrono regex fiber context atomic ][v1.78.0()]
 //Details about finding CUDA
 FIND_PACKAGE_MESSAGE_DETAILS_CUDA:INTERNAL=[/usr/local/cuda][/usr/local/cuda/bin/nvcc][/usr/local/cuda/include][/usr/local/cuda/lib64/libcudart.so][v11.4()]
 //Details about finding CUDNN
 FIND_PACKAGE_MESSAGE_DETAILS_CUDNN:INTERNAL=[/usr/local/cuda/lib64/libcudnn.so][/usr/local/cuda/include][v()]
 //Details about finding OpenCV
-FIND_PACKAGE_MESSAGE_DETAILS_OpenCV:INTERNAL=[/usr][v4.2.0()]
+FIND_PACKAGE_MESSAGE_DETAILS_OpenCV:INTERNAL=[/usr][v4.2.0(4.2)]
 //Details about finding OpenGL
 FIND_PACKAGE_MESSAGE_DETAILS_OpenGL:INTERNAL=[/usr/lib/x86_64-linux-gnu/libOpenGL.so][/usr/lib/x86_64-linux-gnu/libGLX.so][/usr/include][c ][v()]
 //Details about finding PYTHON
 FIND_PACKAGE_MESSAGE_DETAILS_PYTHON:INTERNAL=/usr/bin/python33.8.10
 //Details about finding PythonInterp
-FIND_PACKAGE_MESSAGE_DETAILS_PythonInterp:INTERNAL=[/usr/bin/python3][v3.8.10()]
+FIND_PACKAGE_MESSAGE_DETAILS_PythonInterp:INTERNAL=[/usr/bin/python3][v3.8.10(3.6)]
 //Details about finding Threads
 FIND_PACKAGE_MESSAGE_DETAILS_Threads:INTERNAL=[TRUE][v()]
 //Details about finding Torch
@@ -898,6 +932,7 @@ OPENGL_glx_LIBRARY-ADVANCED:INTERNAL=1
 OPENGL_opengl_LIBRARY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: OPENGL_xmesa_INCLUDE_DIR
 OPENGL_xmesa_INCLUDE_DIR-ADVANCED:INTERNAL=1
+PYBIND11_INCLUDE_DIR:INTERNAL=/home/dewe/sam/gym/third_party/pybind11/include
 //ADVANCED property for variable: PYTHON_EXECUTABLE
 PYTHON_EXECUTABLE-ADVANCED:INTERNAL=1
 PYTHON_INCLUDE_DIRS:INTERNAL=/usr/include/python3.8
@@ -910,7 +945,7 @@ PYTHON_MODULE_PREFIX:INTERNAL=
 PYTHON_VERSION:INTERNAL=3.8.10
 PYTHON_VERSION_MAJOR:INTERNAL=3
 PYTHON_VERSION_MINOR:INTERNAL=8
-Python_ADDITIONAL_VERSIONS:INTERNAL=3.11;3.10;3.9;3.8;3.7;3.6;3.5;3.4
+Python_ADDITIONAL_VERSIONS:INTERNAL=3.11;3.10;3.9;3.8;3.7;3.6
 //Install the dependencies listed in your manifest:
 //\n    If this is off, you will have to manually install your dependencies.
 //\n    See https://github.com/microsoft/vcpkg/tree/master/docs/specifications/manifests.md
@@ -923,27 +958,33 @@ VCPKG_VERBOSE-ADVANCED:INTERNAL=1
 Z_VCPKG_CHECK_MANIFEST_MODE:INTERNAL=OFF
 //Vcpkg root directory
 Z_VCPKG_ROOT_DIR:INTERNAL=/home/dewe/vcpkg
-//Last used Boost_COMPILER value.
-_Boost_COMPILER_LAST:INTERNAL=-vc140
-//Components requested for this build tree.
-_Boost_COMPONENTS_SEARCHED:INTERNAL=atomic;chrono;context;date_time;fiber;filesystem;regex;system;thread
-//Last used Boost_INCLUDE_DIR value.
-_Boost_INCLUDE_DIR_LAST:INTERNAL=/home/dewe/vcpkg/installed/x64-linux/include
-//Last used Boost_LIBRARY_DIR_DEBUG value.
-_Boost_LIBRARY_DIR_DEBUG_LAST:INTERNAL=/home/dewe/vcpkg/installed/x64-linux/lib
-//Last used Boost_LIBRARY_DIR_RELEASE value.
-_Boost_LIBRARY_DIR_RELEASE_LAST:INTERNAL=/home/dewe/vcpkg/installed/x64-linux/lib
-//Last used Boost_NAMESPACE value.
-_Boost_NAMESPACE_LAST:INTERNAL=boost
-//Last used Boost_USE_MULTITHREADED value.
-_Boost_USE_MULTITHREADED_LAST:INTERNAL=ON
-//Last used Boost_USE_STATIC_LIBS value.
-_Boost_USE_STATIC_LIBS_LAST:INTERNAL=OFF
+//CMAKE_INSTALL_PREFIX during last run
+_GNUInstallDirs_LAST_CMAKE_INSTALL_PREFIX:INTERNAL=/usr/local
 _Python:INTERNAL=PYTHON
+//ADVANCED property for variable: boost_atomic_DIR
+boost_atomic_DIR-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: boost_chrono_DIR
+boost_chrono_DIR-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: boost_date_time_DIR
+boost_date_time_DIR-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: boost_filesystem_DIR
+boost_filesystem_DIR-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: boost_headers_DIR
+boost_headers_DIR-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: boost_regex_DIR
+boost_regex_DIR-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: boost_system_DIR
+boost_system_DIR-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: boost_thread_DIR
+boost_thread_DIR-ADVANCED:INTERNAL=1
 //Result of TRY_COMPILE
 compile_result:INTERNAL=TRUE
+//True if pybind11 and all required components found on the system
+pybind11_FOUND:INTERNAL=TRUE
+//Directory where pybind11 headers are located
+pybind11_INCLUDE_DIR:INTERNAL=/home/dewe/sam/gym/third_party/pybind11/include
 //Directories where pybind11 and possibly Python headers are located
-pybind11_INCLUDE_DIRS:INTERNAL=/home/dewe/vcpkg/installed/x64-linux/include;/usr/include/python3.8
+pybind11_INCLUDE_DIRS:INTERNAL=/home/dewe/sam/gym/third_party/pybind11/include;/usr/include/python3.8
 //Result of TRY_RUN
 run_result:INTERNAL=0
 

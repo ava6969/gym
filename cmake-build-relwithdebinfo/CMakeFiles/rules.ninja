@@ -25,7 +25,7 @@ rule CUSTOM_COMMAND
 rule CXX_COMPILER__gym_RelWithDebInfo
   depfile = $DEP_FILE
   deps = gcc
-  command = /usr/local/bin/g++ $DEFINES $INCLUDES $FLAGS -MD -MT $out -MF $DEP_FILE -o $out -c $in
+  command = /usr/bin/g++-11 $DEFINES $INCLUDES $FLAGS -MD -MT $out -MF $DEP_FILE -o $out -c $in
   description = Building CXX object $out
 
 
@@ -44,7 +44,7 @@ rule CXX_STATIC_LIBRARY_LINKER__gym_RelWithDebInfo
 rule CXX_COMPILER__GymTest_RelWithDebInfo
   depfile = $DEP_FILE
   deps = gcc
-  command = /usr/local/bin/g++ $DEFINES $INCLUDES $FLAGS -MD -MT $out -MF $DEP_FILE -o $out -c $in
+  command = /usr/bin/g++-11 $DEFINES $INCLUDES $FLAGS -MD -MT $out -MF $DEP_FILE -o $out -c $in
   description = Building CXX object $out
 
 
@@ -52,7 +52,7 @@ rule CXX_COMPILER__GymTest_RelWithDebInfo
 # Rule for linking CXX executable.
 
 rule CXX_EXECUTABLE_LINKER__GymTest_RelWithDebInfo
-  command = $PRE_LINK && /usr/local/bin/g++ $FLAGS $LINK_FLAGS $in -o $TARGET_FILE $LINK_PATH $LINK_LIBRARIES && $POST_BUILD
+  command = $PRE_LINK && /usr/bin/g++-11 $FLAGS $LINK_FLAGS $in -o $TARGET_FILE $LINK_PATH $LINK_LIBRARIES && $POST_BUILD
   description = Linking CXX executable $TARGET_FILE
   restat = $RESTAT
 
@@ -63,7 +63,7 @@ rule CXX_EXECUTABLE_LINKER__GymTest_RelWithDebInfo
 rule CXX_COMPILER__gym_main_RelWithDebInfo
   depfile = $DEP_FILE
   deps = gcc
-  command = /usr/local/bin/g++ $DEFINES $INCLUDES $FLAGS -MD -MT $out -MF $DEP_FILE -o $out -c $in
+  command = /usr/bin/g++-11 $DEFINES $INCLUDES $FLAGS -MD -MT $out -MF $DEP_FILE -o $out -c $in
   description = Building CXX object $out
 
 
@@ -71,7 +71,7 @@ rule CXX_COMPILER__gym_main_RelWithDebInfo
 # Rule for linking CXX executable.
 
 rule CXX_EXECUTABLE_LINKER__gym_main_RelWithDebInfo
-  command = $PRE_LINK && /usr/local/bin/g++ $FLAGS $LINK_FLAGS $in -o $TARGET_FILE $LINK_PATH $LINK_LIBRARIES && $POST_BUILD
+  command = $PRE_LINK && /usr/bin/g++-11 $FLAGS $LINK_FLAGS $in -o $TARGET_FILE $LINK_PATH $LINK_LIBRARIES && $POST_BUILD
   description = Linking CXX executable $TARGET_FILE
   restat = $RESTAT
 

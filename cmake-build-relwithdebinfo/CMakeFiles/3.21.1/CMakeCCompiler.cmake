@@ -1,7 +1,7 @@
-set(CMAKE_C_COMPILER "/usr/local/bin/gcc")
+set(CMAKE_C_COMPILER "/usr/bin/gcc-11")
 set(CMAKE_C_COMPILER_ARG1 "")
 set(CMAKE_C_COMPILER_ID "GNU")
-set(CMAKE_C_COMPILER_VERSION "11.2.0")
+set(CMAKE_C_COMPILER_VERSION "11.1.0")
 set(CMAKE_C_COMPILER_VERSION_INTERNAL "")
 set(CMAKE_C_COMPILER_WRAPPER "")
 set(CMAKE_C_STANDARD_COMPUTED_DEFAULT "17")
@@ -74,7 +74,7 @@ endif()
 
 
 
-set(CMAKE_C_IMPLICIT_INCLUDE_DIRECTORIES "/usr/local/lib/gcc/x86_64-pc-linux-gnu/11.2.0/include;/usr/local/include;/usr/local/lib/gcc/x86_64-pc-linux-gnu/11.2.0/include-fixed;/usr/include/x86_64-linux-gnu;/usr/include")
+set(CMAKE_C_IMPLICIT_INCLUDE_DIRECTORIES "/usr/lib/gcc/x86_64-linux-gnu/11/include;/usr/local/include;/usr/include/x86_64-linux-gnu;/usr/include")
 set(CMAKE_C_IMPLICIT_LINK_LIBRARIES "gomp;gcc;gcc_s;pthread;c;gcc;gcc_s")
-set(CMAKE_C_IMPLICIT_LINK_DIRECTORIES "/usr/local/lib/gcc/x86_64-pc-linux-gnu/11.2.0;/usr/local/lib64;/lib/x86_64-linux-gnu;/lib64;/usr/lib/x86_64-linux-gnu;/usr/lib64;/usr/local/lib")
+set(CMAKE_C_IMPLICIT_LINK_DIRECTORIES "/usr/lib/gcc/x86_64-linux-gnu/11;/usr/lib/x86_64-linux-gnu;/usr/lib;/lib/x86_64-linux-gnu;/lib")
 set(CMAKE_C_IMPLICIT_LINK_FRAMEWORK_DIRECTORIES "")

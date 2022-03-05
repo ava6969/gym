@@ -13,7 +13,7 @@
 #include "../spaces/multi_discrete.h"
 #include "../spaces/dict.h"
 #include "memory"
-#include "opencv2/opencv.hpp"
+
 
 #define __GYM_VECTOR_ARITHMETIC__(op)     static std::vector<float> operator op (std::vector<float> const& x, std::vector<float> const& y){ \
 std::vector<float> result(x.size()); \
