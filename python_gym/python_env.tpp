@@ -2,6 +2,7 @@
 // Created by dewe on 10/9/21.
 //
 
+#include <wrappers/monitor.h>
 #include "common/utils.h"
 #include "torch/torch.h"
 namespace gym{

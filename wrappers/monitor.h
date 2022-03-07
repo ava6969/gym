@@ -34,7 +34,7 @@ namespace gym {
     };
 
     template<class EnvType, bool allowEarlyResets=true>
-    class Monitor : public Wrapper<typename EnvType::ObservationT,
+    class __attribute__ ((visibility("hidden"))) Monitor : public Wrapper<typename EnvType::ObservationT,
             typename EnvType::ActionT,
             typename EnvType::StepT>{
 

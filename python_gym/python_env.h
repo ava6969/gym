@@ -22,7 +22,7 @@ namespace gym{
     using infer_action_t = std::conditional_t<cont, std::vector<float>, int>;
 
     template<bool dict=false, bool cont=false, bool atari=false>
-    class PythonEnv : public Env< infer_obs_t<dict>, infer_action_t<cont> > {
+    class __attribute__ ((visibility("hidden"))) PythonEnv : public Env< infer_obs_t<dict>, infer_action_t<cont> > {
         py::object env_module;
         inline static std::unique_ptr<py::scoped_interpreter> m_Interpreter = {nullptr};
         std::vector<int64_t> obs_shape;

@@ -10,7 +10,8 @@
 namespace gym{
 
     template<class EnvT>
-    class TimeLimit : public Wrapper<typename EnvT::ObservationT, typename EnvT::ActionT, typename EnvT::StepT> {
+    class __attribute__ ((visibility("hidden"))) TimeLimit :
+            public Wrapper<typename EnvT::ObservationT, typename EnvT::ActionT, typename EnvT::StepT> {
 
     public:
 
