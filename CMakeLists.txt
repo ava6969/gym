@@ -18,8 +18,9 @@ option(ADD_BOX2D OFF)
 option(ADD_ATARI OFF)
 
 include_directories(third_party ${OPENGL_INCLUDE_DIR} ${THIRD_PARTY}/viz_doom/include)
-add_subdirectory(third_party/pybind11)
+#add_subdirectory(third_party/pybind11)
 
+find_package(pybind11 CONFIG REQUIRED)
 find_package(Catch2 CONFIG REQUIRED)
 find_package(box2d CONFIG REQUIRED)
 find_package(OpenGL REQUIRED)
@@ -32,7 +33,7 @@ find_package(Threads REQUIRED)
 set(DEPENDENCIES ${Boost_LIBRARIES}  ${ALE_LIB}
 		Catch2::Catch2 OpenGL::GL glfw box2d::box2d
 		${OpenCV_LIBS} ${TORCH_LIBRARIES} ${LIBVIZDOOM}  ${CMAKE_THREAD_LIBS_INIT}
-		pybind11::embed)
+		pybind11::embed )
 
 set(GYM_TEST_FILES test/classic_control.cpp
 		 test/atari_env.cpp test/wrappers.cpp
