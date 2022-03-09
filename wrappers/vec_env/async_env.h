@@ -72,7 +72,7 @@ namespace gym {
                         while (! this->stop ){
                             init_barrier->arrive_and_wait();
                             std::for_each(env_begin, env_end, [this, start_rank] (auto& env) mutable {
-                                this->stepPerWorker(env, start_rank++);            std::this_thread::sleep_for( std::chrono::milliseconds(rand() % 2000));
+                                this->stepPerWorker(env, start_rank++);
                             });
                             t = env_barrier->arrive(1);
                         }

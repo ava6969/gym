@@ -7,12 +7,6 @@
 /home/dewe/sam/gym/cmake-build-relwithdebinfo/CMakeFiles/list_install_components.dir
 /home/dewe/sam/gym/cmake-build-relwithdebinfo/CMakeFiles/GymTest.dir
 /home/dewe/sam/gym/cmake-build-relwithdebinfo/CMakeFiles/gym_main.dir
-/home/dewe/sam/gym/cmake-build-relwithdebinfo/third_party/pybind11/CMakeFiles/install/strip.dir
-/home/dewe/sam/gym/cmake-build-relwithdebinfo/third_party/pybind11/CMakeFiles/install/local.dir
-/home/dewe/sam/gym/cmake-build-relwithdebinfo/third_party/pybind11/CMakeFiles/edit_cache.dir
-/home/dewe/sam/gym/cmake-build-relwithdebinfo/third_party/pybind11/CMakeFiles/rebuild_cache.dir
-/home/dewe/sam/gym/cmake-build-relwithdebinfo/third_party/pybind11/CMakeFiles/install.dir
-/home/dewe/sam/gym/cmake-build-relwithdebinfo/third_party/pybind11/CMakeFiles/list_install_components.dir
 /home/dewe/sam/gym/cmake-build-relwithdebinfo/common/CMakeFiles/install/strip.dir
 /home/dewe/sam/gym/cmake-build-relwithdebinfo/common/CMakeFiles/install/local.dir
 /home/dewe/sam/gym/cmake-build-relwithdebinfo/common/CMakeFiles/edit_cache.dir
