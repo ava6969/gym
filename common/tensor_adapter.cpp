@@ -16,45 +16,80 @@ namespace gym {
         y = v.item<float>();
     }
 
-    template<>
-    void TensorAdapter::decode(torch::Tensor const& v, std::vector<int>& out) {
-        const auto N = v.size(0);
-        assert(N == out.size());
-        std::memcpy(out.data(), v.cpu().toType(torch::kInt).data_ptr<int>(), sizeof(int) * N);
+    template<typename T>
+    void _mem_cpy(torch::Tensor const& v, std::vector<T>& out, size_t N){
+        if constexpr( std::is_same_v<T, int>)
+            std::memcpy(out.data(), v.cpu().toType(torch::kInt32).data_ptr<T>(), sizeof(int) * N);
+        else if constexpr( std::is_same_v<T, int64_t>)
+            std::memcpy(out.data(), v.cpu().toType(torch::kInt64).data_ptr<T>(), sizeof(int64_t) * N);
+        else if constexpr( std::is_same_v<T, double>)
+            std::memcpy(out.data(), v.cpu().toType(torch::kFloat64).data_ptr<T>(), sizeof(double) * N);
+        else if constexpr( std::is_same_v<T, float>)
+            std::memcpy(out.data(), v.cpu().toType(torch::kFloat32).data_ptr<T>(), sizeof(float) * N);
+        else{
+            static_assert(true, "action type currently supported [int32, int64, double float]");
+        }
     }
 
-    template<>
-    void TensorAdapter::decode(torch::Tensor const& v, std::vector<float>& out) {
+    template<typename T>
+    void _decode(torch::Tensor const& v, std::vector<T>& out) {
         const auto N = v.size(0);
         assert(N == out.size());
-        std::memcpy(out.data(), v.cpu().toType(torch::kFloat32).data_ptr<float>(), sizeof(float) * N);
+        _mem_cpy(v, out, N);
     }
 
-    template<>
-    void TensorAdapter::decode(torch::Tensor const& v, std::vector<std::vector<int>> & out) {
+    template<typename T>
+    void _decode(torch::Tensor const& v, std::vector<std::vector<T>> & out) {
         const auto H = v.size(0);
         auto split_tensor = v.cpu().unbind(0);
         assert(H == split_tensor.size());
         std::transform(split_tensor.begin(), split_tensor.end(), out.begin(), [](auto& x){
             x = x.dim() == 0 ? x.unsqueeze(0) : x;
-            const auto W = x.size(0);
-            std::vector<int> y(W);
-            std::memcpy(y.data(), x.unsqueeze(1).toType(torch::kInt).template data_ptr<int>(), sizeof(int) * W);
+            const size_t W = x.size(0);
+            std::vector<T> y(W);
+            _mem_cpy(x.unsqueeze(1), y, W);
             return y;
         });
     }
 
     template<>
+    void TensorAdapter::decode(torch::Tensor const& v, std::vector<int>& out) {
+        _decode<int>(v, out);
+    }
+
+    template<>
+    void TensorAdapter::decode(torch::Tensor const& v, std::vector<int64_t>& out) {
+        _decode<int64_t>(v, out);
+    }
+
+    template<>
+    void TensorAdapter::decode(torch::Tensor const& v, std::vector<float>& out) {
+        _decode<float>(v, out);
+    }
+
+    template<>
+    void TensorAdapter::decode(torch::Tensor const& v, std::vector<double>& out) {
+        _decode<double>(v, out);
+    }
+
+    template<>
+    void TensorAdapter::decode(torch::Tensor const& v, std::vector<std::vector<int>> & out) {
+        _decode(v, out);
+    }
+
+    template<>
     void TensorAdapter::decode(torch::Tensor const& v, std::vector<std::vector<float>> & out) {
-        const auto H = v.size(0);
-        auto split_tensor = v.cpu().unbind(0);
-        assert(H == split_tensor.size());
-        std::transform(split_tensor.begin(), split_tensor.end(), out.begin(), [](auto const& x){
-            const auto W = x.dim() == 0 ?  1 : x.size(0);
-            std::vector<float> y(W);
-            std::memcpy(y.data(), x.unsqueeze(1).toType(torch::kFloat32).template data_ptr<float>(), sizeof(float) * W);
-            return y;
-        });
+        _decode(v, out);
+    }
+
+    template<>
+    void TensorAdapter::decode(torch::Tensor const& v, std::vector<std::vector<int64_t>> & out) {
+        _decode(v, out);
+    }
+
+    template<>
+    void TensorAdapter::decode(torch::Tensor const& v, std::vector<std::vector<double>> & out) {
+        _decode(v, out);
     }
 
     template<>
