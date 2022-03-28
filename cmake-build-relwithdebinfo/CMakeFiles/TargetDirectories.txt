@@ -31,12 +31,6 @@
 /home/dewe/sam/gym/cmake-build-relwithdebinfo/wrappers/CMakeFiles/rebuild_cache.dir
 /home/dewe/sam/gym/cmake-build-relwithdebinfo/wrappers/CMakeFiles/list_install_components.dir
 /home/dewe/sam/gym/cmake-build-relwithdebinfo/wrappers/CMakeFiles/install.dir
-/home/dewe/sam/gym/cmake-build-relwithdebinfo/atari/CMakeFiles/install/strip.dir
-/home/dewe/sam/gym/cmake-build-relwithdebinfo/atari/CMakeFiles/install/local.dir
-/home/dewe/sam/gym/cmake-build-relwithdebinfo/atari/CMakeFiles/edit_cache.dir
-/home/dewe/sam/gym/cmake-build-relwithdebinfo/atari/CMakeFiles/rebuild_cache.dir
-/home/dewe/sam/gym/cmake-build-relwithdebinfo/atari/CMakeFiles/list_install_components.dir
-/home/dewe/sam/gym/cmake-build-relwithdebinfo/atari/CMakeFiles/install.dir
 /home/dewe/sam/gym/cmake-build-relwithdebinfo/python_gym/CMakeFiles/install/strip.dir
 /home/dewe/sam/gym/cmake-build-relwithdebinfo/python_gym/CMakeFiles/install/local.dir
 /home/dewe/sam/gym/cmake-build-relwithdebinfo/python_gym/CMakeFiles/edit_cache.dir

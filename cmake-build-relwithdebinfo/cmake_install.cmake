@@ -64,11 +64,6 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/home/dewe/sam/gym/cmake-build-relwithdebinfo/atari/cmake_install.cmake")
-endif()
-
-if(NOT CMAKE_INSTALL_LOCAL_ONLY)
-  # Include the install script for the subdirectory.
   include("/home/dewe/sam/gym/cmake-build-relwithdebinfo/python_gym/cmake_install.cmake")
 endif()
 

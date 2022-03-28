@@ -23,17 +23,20 @@ namespace gym{
         using EnvT = EnvType;
 
         static auto make(std::vector< std::unique_ptr<
-                Env<typename EnvType::ObservationT, typename EnvType::ActionT>>> env){
-            return std::make_unique<SyncVecEnv<EnvType, dict>>( std::move(env) );
+                Env<typename EnvType::ObservationT, typename EnvType::ActionT>>> env,
+                bool auto_reset){
+            return std::make_unique<SyncVecEnv<EnvType, dict>>( std::move(env), auto_reset  );
         }
 
         SyncVecEnv(std::shared_ptr<Space> o_space,
                    std::shared_ptr<Space> a_space,
                    std::vector< std::unique_ptr<
-                   Env<typename EnvType::ObservationT, typename EnvType::ActionT>>> envs): VecEnv<dict>( envs.size(),
+                   Env<typename EnvType::ObservationT, typename EnvType::ActionT>>> envs,
+                   bool auto_reset=true): VecEnv<dict>( envs.size(),
                                                                        std::move(o_space),
                                                                        std::move(a_space)),
-                                                                       envs( std::move( envs ) ){
+                                                                       envs( std::move( envs ) ),
+                                                                       m_AutoReset(auto_reset){
             m_BufRews .resize( this->numEnvs );
             m_BufDones.resize( this->numEnvs );
             m_BufInfos.resize( this->numEnvs );
@@ -46,9 +49,10 @@ namespace gym{
         }
 
         explicit SyncVecEnv(std::vector< std::unique_ptr<
-                Env<typename EnvType::ObservationT, typename EnvType::ActionT>>> env ):
+                Env<typename EnvType::ObservationT, typename EnvType::ActionT>>> env,
+        bool auto_reset=true):
         VecEnv<dict>( env.size(), std::move(env[0]->observationSpace()), std::move(env[0]->actionSpace())),
-                envs( std::move( env ) ){
+                envs( std::move( env ) ), m_AutoReset(auto_reset){
             m_BufRews .resize( this->numEnvs );
             m_BufDones.resize( this->numEnvs );
             m_BufInfos.resize( this->numEnvs );
@@ -86,7 +90,7 @@ namespace gym{
         inline void stepPerWorker( std::unique_ptr<Env<typename EnvType::ObservationT, typename EnvType::ActionT>>& env,
                                    int rank)  noexcept{
             auto response = env->step( m_Actions[rank] );
-            if( response.done ){
+            if( response.done && m_AutoReset ){
                 if(response.info.contains("episode")){
                     if( std::any_cast<Result>(response.info["episode"]).l == 1){
                         printf("\n");
@@ -160,7 +164,7 @@ namespace gym{
         std::vector<float> m_BufRews{};
         std::vector<float> m_BufDones{};
         std::vector<AnyMap> m_BufInfos{};
-        bool clearedInfo{false};
+        bool clearedInfo{false}, m_AutoReset{true};
 
         inline void saveObs(int env_idx, typename EnvType::ObservationT && _obs ) {
             if constexpr(dict) {

@@ -20,8 +20,9 @@ namespace gym {
 
         ASyncVecEnv(std::vector< std::unique_ptr<
                 Env<typename EnvType::ObservationT, typename EnvType::ActionT>>> env,
-                    int max_threads=std::thread::hardware_concurrency()):
-        SyncVecEnv<EnvType, dict>( std::move(env)),
+                    int max_threads=std::thread::hardware_concurrency(),
+                    bool auto_reset=true):
+        SyncVecEnv<EnvType, dict>( std::move(env), auto_reset),
                 stop(false){
 
             if(this->numEnvs <= max_threads){
