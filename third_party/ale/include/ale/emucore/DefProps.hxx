@@ -3,7 +3,7 @@
 
 /**
   This code is generated using the 'create_props.pl' script,
-  located in the src/tools directory.  All properties changes
+  located in the cython_src/tools directory.  All properties changes
   should be made in stella.pro, and then this file should be
   regenerated and the application recompiled.
 */
