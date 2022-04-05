@@ -27,7 +27,7 @@ find_package(OpenGL REQUIRED)
 find_package(glfw3 3.3 )
 find_package(OpenCV  CONFIG 4.2 REQUIRED)
 find_package(Torch REQUIRED)
-find_package(Boost NO_MODULE COMPONENTS filesystem thread system date_time chrono regex   REQUIRED)
+find_package(Boost COMPONENTS filesystem thread system date_time chrono regex   REQUIRED)
 find_package(Threads REQUIRED)
 
 set(DEPENDENCIES ${Boost_LIBRARIES}  ${ALE_LIB}
