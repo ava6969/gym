@@ -1,15 +1,14 @@
 cmake_minimum_required(VERSION 3.17)
 
 set(CMAKE_TOOLCHAIN_FILE $ENV{HOME}/vcpkg/scripts/buildsystems/vcpkg.cmake CACHE STRING "Vcpkg toolchain file")
-
+set(Torch_DIR $ENV{HOME}/libtorch/share/cmake/Torch CACHE STRING "Path to Torch ROOT DIR")
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 set(CMAKE_VISIBILITY_INLINES_HIDDEN YES)
-SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fopenmp")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fopenmp")
 
 project(gym)
 
 set(THIRD_PARTY ${CMAKE_CURRENT_LIST_DIR}/third_party)
-set(Torch_DIR $ENV{HOME}/libtorch/share/cmake/Torch)
 set(Boost_USE_STATIC_LIBS   ON)
 set(CMAKE_CXX_STANDARD 20)
 set(BUILD_TEST ON)
@@ -18,7 +17,6 @@ option(ADD_BOX2D OFF)
 option(ADD_ATARI OFF)
 
 include_directories(third_party ${OPENGL_INCLUDE_DIR} ${THIRD_PARTY}/viz_doom/include)
-#add_subdirectory(third_party/pybind11)
 
 find_package(pybind11 CONFIG REQUIRED)
 find_package(Catch2 CONFIG REQUIRED)
@@ -35,10 +33,7 @@ set(DEPENDENCIES ${Boost_LIBRARIES}  ${ALE_LIB}
 		${OpenCV_LIBS} ${TORCH_LIBRARIES} ${LIBVIZDOOM}  ${CMAKE_THREAD_LIBS_INIT}
 		pybind11::embed )
 
-set(GYM_TEST_FILES test/classic_control.cpp
-		 test/atari_env.cpp test/wrappers.cpp
-#		test/box_world.cpp  test/rendering.cpp test/spaces.cpp
-		)
+set(GYM_TEST_FILES test/classic_control.cpp test/atari_env.cpp test/wrappers.cpp)
 
 message(STATUS "TORCH_LIBRARIES: ${TORCH_LIBRARIES}")
 message(STATUS "TORCH_INCLUDE_DIRS: ${TORCH_INCLUDE_DIRS}")
@@ -64,14 +59,12 @@ if(${ADD_BOX2D})
 	add_subdirectory(box2d)
 endif()
 
-#add_subdirectory(custom)
 add_subdirectory(python_gym)
 
 install (TARGETS ${PROJECT_NAME}
 		RUNTIME DESTINATION bin
 		LIBRARY DESTINATION lib
 		ARCHIVE DESTINATION lib)
-
 install (FILES env.h DESTINATION include/gym )
 
 add_executable(gym_main main.cpp)
@@ -83,27 +76,3 @@ if(${BUILD_TEST})
 	target_link_libraries(GymTest PRIVATE ${DEPENDENCIES} gym)
 	target_include_directories(GymTest PRIVATE .)
 endif()
-
-function(print_target_properties tgt)
-	if(NOT TARGET ${tgt})
-		message("There is no target named '${tgt}'")
-		return()
-	endif()
-
-	# this list of properties can be extended as needed
-	set(CMAKE_PROPERTY_LIST SOURCE_DIR BINARY_DIR COMPILE_DEFINITIONS
-			COMPILE_OPTIONS INCLUDE_DIRECTORIES LINK_LIBRARIES)
-
-	message("Configuration for target ${tgt}")
-
-	foreach (prop ${CMAKE_PROPERTY_LIST})
-		get_property(propval TARGET ${tgt} PROPERTY ${prop} SET)
-		if (propval)
-			get_target_property(propval ${tgt} ${prop})
-			message (STATUS "${prop} = ${propval}")
-		endif()
-	endforeach(prop)
-
-endfunction(print_target_properties)
-
-print_target_properties(gym)
