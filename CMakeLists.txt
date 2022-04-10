@@ -24,7 +24,7 @@ find_package(box2d CONFIG REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(glfw3 3.3 )
 
-set(OpenCV_DIR ${SAM_PATH}/open_cv/lib/cmake/opencv4)
+set(OpenCV_DIR ${SAM_PATH}/thirdparty/open_cv/lib/cmake/opencv4)
 find_package(OpenCV REQUIRED core highgui)
 
 find_package(Torch REQUIRED)
