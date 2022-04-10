@@ -5,7 +5,7 @@
 #ifndef RL_TRADING_BOT_CV_TENSOR_ADAPTER_H
 #define RL_TRADING_BOT_CV_TENSOR_ADAPTER_H
 
-#include "opencv2/opencv.hpp"
+#include "opencv4/opencv2/opencv.hpp"
 #include "tensor_adapter.h"
 
 namespace gym {

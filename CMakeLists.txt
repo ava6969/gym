@@ -23,7 +23,10 @@ find_package(Catch2 CONFIG REQUIRED)
 find_package(box2d CONFIG REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(glfw3 3.3 )
-find_package(OpenCV  CONFIG 4.2 REQUIRED)
+
+set(OpenCV_DIR ${SAM_PATH}/open_cv/lib/cmake/opencv4)
+find_package(OpenCV REQUIRED core highgui)
+
 find_package(Torch REQUIRED)
 find_package(Boost COMPONENTS filesystem thread system date_time chrono regex   REQUIRED)
 find_package(Threads REQUIRED)
@@ -42,7 +45,7 @@ message(STATUS "GL_INCLUDES: ${OPENGL_INCLUDE_DIR}")
 add_library(gym STATIC "" common/tensor_adapter.cpp custom/dm_lab/lab.cpp)
 
 target_link_libraries(gym PRIVATE ${DEPENDENCIES})
-target_include_directories(gym PRIVATE .  ${OPENGL_INCLUDE_DIR}  ${TORCH_INCLUDE_DIRS})
+target_include_directories(gym PRIVATE .  ${OPENGL_INCLUDE_DIR} ${OpenCV_INCLUDE_DIRS} ${TORCH_INCLUDE_DIRS})
 target_compile_options(gym PRIVATE -fvisibility=hidden)
 set_target_properties(gym PROPERTIES CXX_VISIBILITY_PRESET "hidden" CUDA_VISIBILITY_PRESET "hidden")
 
