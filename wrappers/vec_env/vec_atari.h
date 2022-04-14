@@ -31,6 +31,13 @@ namespace gym {
                         sz[0] = channel;
                         key.push_back(name);
                         _newSpaces[name] = gym::makeBoxSpace<float>(0, 1, sz );
+                    }else if(space_->size().size() == 4){
+                        std::vector<int64_t> sz = space_->size();
+                        auto channel = sz.back();
+                        sz[3] = sz[1];
+                        sz[1] = channel;
+                        key.push_back(name);
+                        _newSpaces[name] = gym::makeBoxSpace<float>(0, 1, sz );
                     }else{
                         _newSpaces[name] = space_->clone();
                     }
@@ -50,12 +57,12 @@ namespace gym {
                 VecEnvWrapper<VenvT, false>(std::move(obsSpace), std::move(actSpace)) {}
 
         [[nodiscard]] inline torch::Tensor observation(torch::Tensor const &x) const noexcept {
-            return x.permute({0, 3, 1, 2}) / 255;
+            return x.dim() == 4 ? x.permute({0, 3, 1, 2}) / 255 : x.permute({0, 1, 4, 2, 3}) / 255;
         }
 
         [[nodiscard]] inline auto observation(::TensorDict x) const noexcept {
             for(auto& k : key)
-                x[k] = x[k].permute({0, 3, 1, 2}) / 255;
+                x[k] = x[k].dim() == 4 ? x[k].permute({0, 3, 1, 2}) / 255 : x[k].permute({0, 1, 4, 2, 3}) / 255;
             return x;
         }
 
