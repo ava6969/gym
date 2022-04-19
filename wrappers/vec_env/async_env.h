@@ -109,6 +109,7 @@ namespace gym {
 
         ~ASyncVecEnv(){
             this->stop = true;
+            this->cantStep = false;
             release();
             for(auto& ftr: workers){
                 ftr.join();
