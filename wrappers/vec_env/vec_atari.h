@@ -14,6 +14,7 @@ namespace gym {
     template<class VenvT, bool dict>
     class VecNormAndPermute : public VecEnvWrapper<VenvT, dict> {
         std::vector<std::string> key;
+        bool norm{true};
     public:
         explicit VecNormAndPermute(std::unique_ptr <VenvT> env) : VecEnvWrapper<VenvT, dict> ( std::move(env)){
             this->m_ActionSpace = this->actionSpace();
@@ -24,22 +25,31 @@ namespace gym {
                 NamedSpaces _newSpaces;
 
                 for(auto const& [name, space_] : namedSpaces ){
+                    std::vector<int64_t> sz;
                     if(space_->size().size() == 3){
-                        std::vector<int64_t> sz = space_->size();
+                        sz = space_->size();
                         auto channel = sz.back();
                         sz[2] = sz[0];
                         sz[0] = channel;
                         key.push_back(name);
                         _newSpaces[name] = gym::makeBoxSpace<float>(0, 1, sz );
                     }else if(space_->size().size() == 4){
-                        std::vector<int64_t> sz = space_->size();
+                        sz = space_->size();
                         auto channel = sz.back();
                         sz[3] = sz[1];
                         sz[1] = channel;
                         key.push_back(name);
-                        _newSpaces[name] = gym::makeBoxSpace<float>(0, 1, sz );
                     }else{
                         _newSpaces[name] = space_->clone();
+                        continue;
+                    }
+
+                    if(auto sh = space_->template as<Box<float>>()){
+                        norm = false;
+                        _newSpaces[name] = gym::makeBoxSpace<float>(sh->getRange()[0].low,
+                                                                    sh->getRange()[0].high, sz );
+                    }else{
+                        _newSpaces[name] = gym::makeBoxSpace<float>(0, 1, sz );
                     }
                 }
 
@@ -57,12 +67,18 @@ namespace gym {
                 VecEnvWrapper<VenvT, false>(std::move(obsSpace), std::move(actSpace)) {}
 
         [[nodiscard]] inline torch::Tensor observation(torch::Tensor const &x) const noexcept {
-            return x.dim() == 4 ? x.permute({0, 3, 1, 2}) / 255 : x.permute({0, 1, 4, 2, 3}) / 255;
+            auto y = x.dim() == 4 ? x.permute({0, 3, 1, 2})  : x.permute({0, 1, 4, 2, 3});
+            if(norm)
+                y = y /255;
+            else{
+                y = y.to(torch::kFloat);
+            }
+            return y;
         }
 
         [[nodiscard]] inline auto observation(::TensorDict x) const noexcept {
             for(auto& k : key)
-                x[k] = x[k].dim() == 4 ? x[k].permute({0, 3, 1, 2}) / 255 : x[k].permute({0, 1, 4, 2, 3}) / 255;
+                x[k] = observation(x[k]);
             return x;
         }
 
