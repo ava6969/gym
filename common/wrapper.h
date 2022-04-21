@@ -115,6 +115,10 @@
             return m_Env->render(type);
         }
 
+        inline std::string info() override {
+            return this->m_Env->info();
+        }
+
         inline void seed(std::optional<uint64_t> const& seed) noexcept override {
             m_Env->seed(seed);
         }

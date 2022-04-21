@@ -59,6 +59,8 @@ namespace gym{
 
         virtual void render(RenderType ) {}
 
+        virtual std::string info() { return "Gym Env"; }
+
         virtual void seed(std::optional<uint64_t> const& _seed) noexcept {}
 
         virtual StepT step(ActionT const& action) noexcept = 0;

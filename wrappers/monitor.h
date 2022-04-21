@@ -40,11 +40,12 @@ namespace gym {
 
     public:
         Monitor(std::unique_ptr< Env<typename EnvType::ObservationT, typename EnvType::ActionT> > env,
+                std::optional<int> invalid_returns,
                 std::string const& id = "",
                 std::filesystem::path const& fileName = ""):
                 Wrapper<typename EnvType::ObservationT,
                         typename EnvType::ActionT,
-                        typename EnvType::StepT>( std::move(env) ){
+                        typename EnvType::StepT>( std::move(env) ), invalid_returns(invalid_returns){
 
             this->t_start = std::chrono::high_resolution_clock::now();
             if( not fileName.empty() ){
@@ -77,15 +78,23 @@ namespace gym {
             if( needsReset ){
                 std::cerr << "Tried to step environment that needs reset\n";
             }
-            reward += response.reward;
+            reward .push_back( response.reward );
             _steps++;
             if( response.done ){
                 needsReset = true;
-                episodeReturns.push_back( reward );
+                episodeReturns.push_back( std::accumulate(reward.begin(), reward.end(), 0.f) );
                 episodeLengths.push_back( _steps );
                 episodeTimes.push_back( std::chrono::duration<double>( std::chrono::high_resolution_clock::now() -
                                                                        t_start).count());
-                Result epInfo{reward, _steps, episodeTimes.back()};
+                Result epInfo{episodeReturns.back(), _steps, episodeTimes.back()};
+
+                if(invalid_returns and epInfo.r >= invalid_returns){
+                    std::stringstream ss;
+                    ss << this->info() << "\n";
+                    ss << "Invalid Episode Returns: " << epInfo.r << "\n" <<  reward << " Steps: " << epInfo.l;
+                    std::cerr << ss.str() << "\n";
+                }
+
                 if(writer)
                     writer.value() << epInfo;
                 response.info["episode"] = epInfo;
@@ -107,9 +116,10 @@ namespace gym {
         std::vector<float> episodeLengths;
         std::vector<float> episodeTimes;
         size_t totalSteps{};
-        float reward{};
+        std::vector<float> reward{};
         float _steps{};
         bool needsReset{true};
+        std::optional<int> invalid_returns;
     };
 }
 
