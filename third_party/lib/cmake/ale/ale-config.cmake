@@ -3,7 +3,7 @@
 ####### Any changes to this file will be overwritten by the next CMake run ####
 ####### The input file was ale-config.cmake.in                            ########
 
-get_filename_component(PACKAGE_PREFIX_DIR "${CMAKE_CURRENT_LIST_DIR}/../../../" ABSOLUTE)
+get_filename_component(PACKAGE_PREFIX_DIR "../../../ale" ABSOLUTE)
 
 macro(set_and_check _var _file)
   set(${_var} "${_file}")
@@ -35,4 +35,4 @@ if(SDL_SUPPORT AND NOT SDL_DYNLOAD)
   find_dependency(SDL2 REQUIRED)
 endif()
 
-include("${CMAKE_CURRENT_LIST_DIR}/ale-targets.cmake")
+include("ale-targets.cmake")

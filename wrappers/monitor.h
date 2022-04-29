@@ -109,6 +109,13 @@ namespace gym {
         inline auto getEpisodeLengths() const noexcept { return episodeLengths; }
         inline auto getEpisodeTimes() const noexcept { return episodeTimes; }
 
+        auto make(std::unique_ptr< Env<typename EnvType::ObservationT, typename EnvType::ActionT> > env,
+                  std::optional<int> invalid_returns,
+                  std::string const& id = "",
+                  std::filesystem::path const& fileName = ""){
+            return std::make_unique< Monitor<EnvType, allowEarlyResets> >( std::move(env), invalid_returns, id, fileName);
+        }
+
     private:
         decltype(std::chrono::high_resolution_clock::now()) t_start;
         std::optional<ResultWriter> writer;

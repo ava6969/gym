@@ -83,7 +83,11 @@ namespace gym {
                                                                                                     meaning,
                                                                                                     noopMax);
             wrappedEnv = std::make_unique<MaxAndSkipEnv>(move(wrappedEnv), frameSkip);
-            wrappedEnv = std::make_unique<MonitorWithEarlyReset< MaxAndSkipEnv>>( std::move(wrappedEnv) );
+
+            wrappedEnv = MonitorWithEarlyReset< MaxAndSkipEnv>>(
+                    std::move(wrappedEnv),
+                    std::numeric_limits<double>::max());
+
             if(terminalOnLifeLoss)
                 wrappedEnv = std::make_unique<EpisodicLifeEnv>(move(wrappedEnv));
 
