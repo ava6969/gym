@@ -2,7 +2,7 @@
 // Created by dewe on 8/31/21.
 //
 
-//#include "atari/atari_env.h"
+#include "time_limit.h"
 #include "atari_wrappers.h"
 
 namespace gym{
@@ -64,5 +64,60 @@ namespace gym{
             m_Env->reset();
 
         return resp.observation;
+    }
+
+    std::unique_ptr< Env<ObsT<true>, int> > AtariWrapper::make( std::unique_ptr< Env<ObsT<true>, int>>  env,
+                                                                  int noopMax,
+                                                                  int frameSkip,
+                                                                  int screenSize,
+                                                                  bool terminalOnLifeLoss,
+                                                                  bool clipReward){
+        auto* baseAtariEnv = dynamic_cast<AtariEnv<true>*>(env.get());
+        std::vector<std::string> action_meaning;
+        bool update_parent=false;
+
+        if( not baseAtariEnv){
+            auto* wrapped = dynamic_cast<gym::Wrapper< Env<ObsT<true>, int> >*>(env.get());
+            if (wrapped)
+                baseAtariEnv = wrapped->try_cast<AtariEnv<true>>();
+            else{
+                if( auto time_limit = dynamic_cast< gym::TimeLimit< AtariEnv<true> > * >(env.get()) ){
+                    baseAtariEnv = time_limit->try_cast<AtariEnv<true>>();
+                    update_parent = true;
+                }
+            }
+
+            if(not baseAtariEnv){
+                throw std::runtime_error("Gym Env passed into AtariWrapper has no pointer or relationship to an Atari");
+            }
+        }
+
+        action_meaning = baseAtariEnv->getActionMeaning();
+        std::unique_ptr< Env<ObsT<true>, int>> wrappedEnv = std::make_unique<NOOPResetEnv>(move(env),
+                                                                                           action_meaning,
+                                                                                           noopMax);
+        wrappedEnv = std::make_unique<MaxAndSkipEnv>(move(wrappedEnv), frameSkip);
+
+        wrappedEnv = std::make_unique< Monitor< Env<ObsT<true>, int>, true> >( std::move(wrappedEnv) );
+
+        if(terminalOnLifeLoss){
+            if(update_parent){
+                wrappedEnv = std::make_unique<EpisodicLifeEnv>(move(wrappedEnv), baseAtariEnv);
+            }else{
+                wrappedEnv = std::make_unique<EpisodicLifeEnv>(move(wrappedEnv));
+            }
+        }
+
+        if(std::find(action_meaning.begin(), action_meaning.end(), "FIRE") != action_meaning.end()){
+            wrappedEnv = std::make_unique<FireResetEnv>(move(wrappedEnv));
+        }
+
+        wrappedEnv = std::make_unique<WarpFrameEnv>(move(wrappedEnv), screenSize, screenSize);
+
+        if(clipReward){
+            wrappedEnv = std::make_unique<ClipRewardEnv< Env<ObsT<true>, int> >>(move(wrappedEnv));
+        }
+
+        return std::make_unique<AtariWrapper>( std::move(wrappedEnv) );
     }
 }

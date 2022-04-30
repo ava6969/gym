@@ -29,7 +29,7 @@ namespace gym{
                 {
                     auto const& [key, subspace] = space;
                     std::tie(channelFirst[key], stackDimension[key], stackedObs[key], repeatAxis[key])
-                    = computeStacking( numEnvs, numStacks, subspace, channelsOrder );
+                    = computeStacking( numEnvs, numStacks, subspace->clone(), channelsOrder );
                 }
             }else{
                 std::tie(channelFirst, stackDimension, stackedObs, repeatAxis) = computeStacking( numEnvs,
@@ -51,19 +51,23 @@ namespace gym{
         }
 
         template<typename T>
-        std::shared_ptr<gym::Space> stackObservationSpace(const gym::Box<T> * space){
+        std::shared_ptr<gym::Space> stackObservationSpace(const gym::Box<T> * space,
+                                                          std::string const& key){
             auto range = space->getRange()[0];
             auto sz = space->size();
-            sz[repeatAxis] = nStack;
+            if constexpr(dict)
+                *(sz.end() + repeatAxis[key] ) = nStack;
+            else
+                *(sz.end() + repeatAxis) = nStack;
             return gym::makeBoxSpace<T>( range.low, range.high, sz);
         }
 
-        std::shared_ptr<gym::Space> stackObservationSpace(std::shared_ptr<gym::Space> const& _space){
+        std::shared_ptr<gym::Space> stackObservationSpace(std::shared_ptr<gym::Space> const& _space, std::string const& key){
 
             if(auto boxSpace = _space->as<gym::space::Box<float>>())
-                return stackObservationSpace( boxSpace );
+                return stackObservationSpace( boxSpace, key );
             else if( auto uIntSpace = _space->as<gym::space::Box<uint8_t>>() ){
-                return stackObservationSpace( uIntSpace );
+                return stackObservationSpace( uIntSpace, key );
             }else{
                 throw std::runtime_error("Not Implemented\n");
             }
@@ -73,14 +77,22 @@ namespace gym{
         std::shared_ptr<gym::Space> stackObservationSpace(std::shared_ptr<gym::ADict> const& space){
             gym::space::NamedSpaces spaces;
             for( auto const& [name, _space] : space->namedSpaces() ){
-                spaces[name] = stackObservationSpace( _space );
+                spaces[name] = stackObservationSpace( _space, name );
             }
             return std::make_shared<gym::ADict>( spaces );
         }
 
-        inline void stack(torch::Tensor& y, torch::Tensor const& x, int size){
+        std::shared_ptr<gym::Space> stackObservationSpace(gym::space::Space* space){
+            if constexpr(dict){
+                return stackObservationSpace( space->template as<ADict>() );
+            }else{
+                return stackObservationSpace( space->clone(), "observation" );
+            }
+        }
+
+        inline void stack(torch::Tensor& y, torch::Tensor const& x, int size, bool channel_first){
             using S = torch::indexing::Slice;
-            y = channelFirst ? y.index_put_({S(), S(-size), "..."}, x) : y.index_put_({"...", S(-size)}, x);
+            y = channel_first ? y.index_put_({S(), S(-size), "..."}, x) : y.index_put_({"...", S(-size)}, x);
         }
 
         void render(){
@@ -88,38 +100,37 @@ namespace gym{
                 plot("last stack", stackedObs[nStack-1], 84, 84, false);
         }
 
-        inline void reset(torch::Tensor & y, torch::Tensor const& x, int stackDim){
+        inline void reset(torch::Tensor & y, torch::Tensor const& x, int stackDim, bool channel_first){
             y.index_put_({"..."}, 0);
-            stack(y, x, x.size( stackDim ));
+            stack(y, x, x.size( stackDim ), channel_first);
         }
 
         infer<> reset(infer<> const& x){
 
             if constexpr(dict){
-                for (auto const& entry : x) {
-                    auto const& [key, obs] = entry;
-                    reset(stackedObs[key], obs, stackDimension[key]);
+                for (auto const& [key, obs]: x) {
+                    reset(stackedObs[key], obs, stackDimension[key], channelFirst[key]);
                 }
             }else{
-                reset(stackedObs, x, stackDimension);
+                reset(stackedObs, x, stackDimension, channelFirst);
             }
             return stackedObs;
         }
 
-        void update(torch::Tensor & y, torch::Tensor const& x, int stackDim){
+        void update(torch::Tensor & y, torch::Tensor const& x, int stackDim, bool channel_first){
             auto stackAxSize = x.size( stackDim );
             y = torch::roll(y, -stackAxSize, stackDim);
-            stack(y, x, stackDim);
+            stack(y, x, stackDim, channel_first);
         }
 
         auto update(infer<> const& x){
             if constexpr( dict){
                 for (auto const& entry : x) {
                     auto const& [key, obs] = entry;
-                    update(stackedObs[key], obs, stackDimension[key]);
+                    update(stackedObs[key], obs, stackDimension[key], channelFirst[key]);
                 }
             }else{
-                update(stackedObs, x, stackDimension);
+                update(stackedObs, x, stackDimension, channelFirst);
             }
 
             return stackedObs;
@@ -133,9 +144,9 @@ namespace gym{
         infer<int> repeatAxis{};
 
         static bool isImageSpaceChannelsFirst(std::shared_ptr<Space> const&  space){
-            auto smallestDimIt = std::min_element(space->size().begin(), space->size().end());
-            assert(smallestDimIt.base());
-            auto smallestDim = *smallestDimIt;
+            auto sz = space->size();
+            auto smallestDimIt = std::min_element(sz.begin(), sz.end());
+            auto smallestDim = smallestDimIt - sz.begin();
             if (smallestDim == 1){
                 throw std::runtime_error("Treating image space as channels-last, while second dimension "
                                          "was smallest of the three.");
@@ -173,15 +184,17 @@ namespace gym{
                 } else
                     channels_first = false;
             }else{
-                auto lastFirst = {"last", "first"};
-                assert(std::find(lastFirst.begin(), lastFirst.end(), channelsOrder.value()) != lastFirst.end());
-                channels_first = channelsOrder.value() == "first";
+                std::vector lastFirst{"last", "first"};
+                auto result = std::ranges::find(lastFirst, *channelsOrder);
+                if(result != end(lastFirst))
+                    throw std::runtime_error("`channels_order` must be one of following: 'last', 'first'");
+                channels_first = (channelsOrder.value() == "first");
             }
 
             auto shape = oSpace->size();
             auto stack_dim = channels_first ? 1 : -1;
             auto repeat_axis = channels_first ? 0 : -1;
-            shape[repeat_axis] = n_stacks;
+            *(shape.end() + repeat_axis) = n_stacks;
             shape.insert(shape.begin(), n_envs);
             auto stacked_obs = torch::zeros(shape, oSpace->type());
             return std::make_tuple( channels_first, stack_dim, stacked_obs, repeat_axis );

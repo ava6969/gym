@@ -12,11 +12,8 @@ namespace gym{
     class CartPoleEnv : public Env<std::vector<double>, int> {
 
     public:
-        using ObservationT = std::vector<double>;
-        using ActionT = int;
-        using StepT = StepResponse<ObservationT>;
 
-        CartPoleEnv(OptionalArgMap const&);
+        explicit CartPoleEnv(Kwargs const&);
 
         void render(RenderType type) final;
 

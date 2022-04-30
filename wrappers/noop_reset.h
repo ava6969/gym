@@ -10,7 +10,7 @@
 
 namespace gym {
 
-    class NOOPResetEnv : public Wrapper< ObsT<true>, int> {
+    class NOOPResetEnv : public Wrapper< Env< ObsT<true>, int> > {
 
     private:
         std::optional<int> m_OverrideNumNoops{std::nullopt};

@@ -11,8 +11,6 @@
 #include "vector"
 #include "../custom/dm_lab/base_lab.h"
 #include "array"
-#include "pybind11/numpy.h"
-
 
 namespace py = pybind11;
 
@@ -45,13 +43,6 @@ namespace gym{
 
         static TensorDict
         encode(std::unordered_map<std::string, DMObservation> const &x, std::unordered_map<char, int> tokenizer = {});
-
-        template<class T>
-        static inline auto complete(py::array && x, std::vector<ssize_t> const& sshape, ssize_t n){
-            std::vector<T> x_vec(n);
-            std::memmove( x_vec.data(), x.request().ptr, sizeof(T) * n);
-            return torch::tensor(x_vec).view(sshape);
-        }
 
         template<typename T>
         static inline

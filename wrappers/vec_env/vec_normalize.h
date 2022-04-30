@@ -3,6 +3,7 @@
 //
 #pragma once
 
+#include <filesystem>
 #include "common/normalizers/running_mean_std.h"
 #include "updateable.h"
 #include "vec_env_wrapper.h"
@@ -16,19 +17,19 @@ namespace gym {
         torch::Tensor reward, discounts;
     };
 
-    template<class VenvType, bool dict, bool isTraining, bool normReward, bool normObs>
-    class VecNormalize : public VecEnvWrapper<VenvType, dict>, public Updateable<VecNormalizeStateRewardPair<dict>> {
+    template<bool dict, bool isTraining, bool normReward, bool normObs>
+    class VecNormalize : public VecEnvWrapper<dict>, public Updateable<VecNormalizeStateRewardPair<dict>> {
         public:
-            explicit VecNormalize(std::unique_ptr< VenvType > m_Env,
+            explicit VecNormalize(std::unique_ptr< VecEnv<dict> > m_Env,
                                 float clip_obs=10.f,
                                 float clip_reward=10.f,
                                 float gamma=0.99,
-                                float epsilon=1e-8):VecEnvWrapper<VenvType, dict>(std::move(m_Env)),
-                                        m_ClipObs(clip_obs),
-                                                     m_ClipReward(clip_reward),
-                                                     m_Epsilon(epsilon),
-                                                     m_Gamma( torch::tensor(gamma) ),
-                                                     ZERO(torch::zeros(this->numEnvs)){
+                                float epsilon=1e-8):VecEnvWrapper<dict>(std::move(m_Env)),
+                                m_ClipObs(clip_obs),
+                                m_ClipReward(clip_reward),
+                                m_Epsilon(epsilon),
+                                m_Gamma( torch::tensor(gamma) ),
+                                ZERO(torch::zeros(this->numEnvs)){
 
                 if constexpr(dict){
 #ifdef EXCLUDES
@@ -58,14 +59,14 @@ namespace gym {
             }
 
         explicit VecNormalize(VecEnv<dict>* main,
-                              std::unique_ptr< VenvType > m_Env,
+                              std::unique_ptr< VecEnv<dict> > m_Env,
                               float clip_obs=10.f,
                               float clip_reward=10.f,
                               float gamma=0.99,
                               float epsilon=1e-8):
                               VecNormalize( std::move(m_Env), clip_obs, clip_reward, gamma, epsilon){
                 if(main){
-                    if( auto normEnv = dynamic_cast<VecNormalize< VenvType, dict, true, normReward, normObs>*>(main)){
+                    if( auto normEnv = dynamic_cast<VecNormalize< dict, true, normReward, normObs>*>(main)){
                         std::tie(m_ObsRMS, m_RetRMS) = normEnv->get();
                     }
                 }
@@ -155,7 +156,7 @@ namespace gym {
             return obs;
         }
 
-        typename VecEnvWrapper<VenvType, dict>::StepT stepWait() noexcept override{
+        typename VecEnv<dict>::StepT stepWait() noexcept override{
             auto stepData = this->venv->stepWait();
 
             if constexpr(isTraining and normObs){
@@ -175,8 +176,8 @@ namespace gym {
             return stepData;
         }
 
-        infer_type<dict> reset(int index) noexcept override {
-            infer_type<dict> obs = this->venv->reset(index);
+        typename VecEnv<dict>::ObservationT reset(int index) noexcept override {
+            typename VecEnv<dict>::ObservationT obs = this->venv->reset(index);
 
             m_Returns[index] = 0;
 
@@ -204,8 +205,7 @@ namespace gym {
             }
         }
 
-        typename VecEnvWrapper<VenvType, dict>::StepT
-        step(int index, torch::Tensor const& action) noexcept override{
+        typename VecEnv<dict>::StepT step(int index, torch::Tensor const& action) noexcept override{
             auto stepData = this->venv->step(index, action);
 
             if constexpr(normObs)
@@ -219,7 +219,7 @@ namespace gym {
 
         private:
             std::conditional_t<dict, std::unordered_map<std::string, RunningMeanStd> , RunningMeanStd> m_ObsRMS;
-            mutable infer_type<dict> old_obs;
+            mutable typename VecEnv<dict>::ObservationT old_obs;
             RunningMeanStd m_RetRMS;
             float m_ClipObs, m_ClipReward;
             float m_Epsilon;

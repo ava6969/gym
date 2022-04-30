@@ -1,0 +1,1 @@
+target_sources(gym PRIVATE vec_atari.cpp vec_frame_stack.cpp)

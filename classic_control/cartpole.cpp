@@ -6,7 +6,7 @@
 
 namespace gym{
 
-    CartPoleEnv::CartPoleEnv(OptionalArgMap const&){
+    CartPoleEnv::CartPoleEnv(Kwargs const&){
         auto&& high = {m_XThreshold * 2,
                        std::numeric_limits<float>::max(),
                        m_ThetaThresholdRadians * 2,
@@ -34,12 +34,12 @@ namespace gym{
 
         auto[x, xDot, theta, thetaDot] = std::make_tuple(m_State[0], m_State[1],m_State[2],m_State[3]);
 
-        float force = action == 1 ? m_ForceMag : -m_ForceMag;
+        auto force = (action == 1) ? m_ForceMag : -m_ForceMag;
 
-        float cosTheta = std::cos(theta);
-        float sinTheta = std::sin(theta);
+        auto cosTheta = float( std::cos(theta) );
+        auto sinTheta = float( std::sin(theta) );
 
-        float temp = (force + m_PoleMassLength * (thetaDot * thetaDot) * sinTheta )
+        auto temp = float(force + m_PoleMassLength * (thetaDot * thetaDot) * sinTheta )
                 / m_TotalMass;
 
         float thetaAcc = (m_Gravity * sinTheta - cosTheta * temp) /
@@ -83,7 +83,7 @@ namespace gym{
             m_StepsBeyondDone.value() += 1;
             reward = 0.0;
         }
-
+        timeStep++;
         return {m_State, reward, done, {}};
     }
 

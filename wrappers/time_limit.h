@@ -10,8 +10,7 @@
 namespace gym{
 
     template<class EnvT>
-    class __attribute__ ((visibility("hidden"))) TimeLimit :
-            public Wrapper<typename EnvT::ObservationT, typename EnvT::ActionT, typename EnvT::StepT> {
+    class __attribute__ ((visibility("hidden"))) TimeLimit : public Wrapper<EnvT> {
 
     public:
 
@@ -21,8 +20,7 @@ namespace gym{
         }
 
         TimeLimit(std::unique_ptr<EnvT> env,
-                  std::optional<size_t> const& max_episode_steps):
-        Wrapper<typename EnvT::ObservationT, typename EnvT::ActionT, typename EnvT::StepT>( std::move(env) ){
+                  std::optional<size_t> const& max_episode_steps):Wrapper<EnvT>( std::move(env) ){
             if( max_episode_steps )
                 maxEpisodeSteps = max_episode_steps.value();
         }

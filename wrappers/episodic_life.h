@@ -10,7 +10,7 @@
 
 namespace gym {
 
-    class EpisodicLifeEnv : public Wrapper< ObsT<true>, int> {
+    class EpisodicLifeEnv : public Wrapper< Env< ObsT<true>, int> > {
 
     private:
          int m_Lives{0};
@@ -26,6 +26,9 @@ namespace gym {
                 throw std::runtime_error("EpisodicLifeEnv only supports wrapping AtariEnv");
             }
         }
+
+        explicit EpisodicLifeEnv(std::unique_ptr<gym::Env<ObsT<true>, int>> env,
+                                 AtariEnv<true>* parent):Wrapper(std::move(env)), parent(parent){}
 
         StepResponse<ObsT<true>> step(const int &action) noexcept override;
 

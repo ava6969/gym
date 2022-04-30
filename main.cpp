@@ -1,15 +1,16 @@
-#include "python_gym/python_env.h"
+//#include "python_gym/python_env.h"
 #include "classic_control/cartpole.h"
-#include "wrappers/vec_env/sync_env.h"
-#include "gym_.h"
-#include "wrappers/vec_env/vec_atari.h"
-#include "wrappers/vec_env/vec_frame_stack.h"
-#include "atari/atari_env.h"
+//#include "wrappers/vec_env/sync_env.h"
+//#include "gym_.h"
+//#include "wrappers/vec_env/vec_atari.h"
+//#include "wrappers/vec_env/vec_frame_stack.h"
+//#include "atari/atari_env.h"
 #include "wrappers/atari_wrappers.h"
 
 int main() {
     using namespace gym;
 
+//    AtariEnv<> env("air_raid");
 
     cv::Mat x, y;
     std::vector<uint8_t> x1, y1;

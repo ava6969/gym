@@ -9,15 +9,11 @@
 #include "wrappers/monitor.h"
 #include "wrappers/vec_env/sync_env.h"
 #include "wrappers/vec_env/async_env.h"
-#include "python_gym/python_env.h"
 #include "classic_control/cartpole.h"
 
 namespace gym{
-    template<class VecEnvT, bool dict>
-    using TrainingVecNormRO = VecNormalize<VecEnvT, dict, true, true, true>;
-
-    template<class VecEnvT, bool dict>
-    using EvalVecNormRO = VecNormalize<VecEnvT, dict, false, true, true>;
+    template<bool dict>
+    using TrainingVecNormRO = VecNormalize<dict, true, true, true>;
 
     template<class EnvT>
     using MonitorWithEarlyReset = Monitor<EnvT, true>;

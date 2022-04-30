@@ -5,6 +5,7 @@
 #pragma once
 
 #include <map>
+#include "opencv2/opencv.hpp"
 #include "any"
 #include "unordered_map"
 #include "string"
@@ -45,6 +46,38 @@ namespace cv{
 
 namespace gym{
     using namespace space;
+
+    template <class T>
+    class is_dict {
+        struct One { char a[1]; };
+        struct Two { char a[2]; };
+
+        template <class U>
+        static One foo(typename U::key_type*);
+
+        template <class U>
+        static Two foo(...);
+
+    public:
+        static const bool value = sizeof(foo<T>(nullptr)) == sizeof(One);
+    };
+
+    struct FrameStackVisitor{
+        std::mt19937 gen;
+
+        FrameStackVisitor():
+                gen(std::mt19937(std::random_device{}()))
+        {}
+
+        int operator()(int const& frameStack){
+            return frameStack;
+        }
+
+        int operator()(std::array<int, 2> const& bound){
+            std::uniform_int_distribution<int> dist(bound[0], bound[1]);
+            return dist(gen);
+        }
+    };
 
     template <typename T> static inline
     std::unique_ptr<space::Space> makeBoxSpace( space::Shape const& shape){

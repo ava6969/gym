@@ -10,6 +10,7 @@
 #include <boost/algorithm/string/predicate.hpp>
 #include "opencv2/opencv.hpp"
 #include "boost/algorithm/string.hpp"
+#include "torch/torch.h"
 
 namespace py = pybind11;
 
@@ -40,30 +41,27 @@ namespace gym{
         std::unique_ptr<Space> fromPythonSpace(py::object const& space, py::module_ const& gym);
 
     public:
-        using ObservationT = infer_obs_t<dict>;
-        using ActionT = infer_action_t<cont>;
-        using StepT = StepResponse<infer_obs_t<dict>>;
 
         explicit PythonEnv(std::string const& id);
 
-        inline ObservationT observation( py::handle && x_in) noexcept{
+        inline infer_obs_t<dict> observation( py::handle && x_in) noexcept{
             if constexpr(dict){
                 infer_obs_t<dict> x_dict;
                 auto x = x_in.template cast<py::dict>();
                 for( auto const& entry: x)
-                    x_dict[ entry.first.template cast<std::string>()] = entry.second.cast<py::array>();
+                    x_dict[ entry.first.cast<std::string>()] = entry.second.cast<py::array>();
                 return x_dict;
             }else{
                 return x_in. template cast<py::array>();
             }
         }
 
-        inline ObservationT reset() noexcept final{
+        inline infer_obs_t<dict> reset() noexcept final{
             auto y = observation( env_module.attr("reset")() );
             return y;
         }
 
-        StepT step(ActionT const& action) noexcept final;
+        StepResponse< infer_obs_t<dict> > step(infer_action_t<cont>  const& action) noexcept final;
 
         inline void seed(std::optional<uint64_t> const& seed) noexcept override{
             if(seed)
@@ -79,6 +77,13 @@ namespace gym{
         }
     };
 
-}
 
-#include "python_env.tpp"
+    extern template class PythonEnv<true, true, true>;
+    extern template class PythonEnv<true, true, false>;
+    extern template class PythonEnv<true, false, true>;
+    extern template class PythonEnv<true, false, false>;
+    extern template class PythonEnv<false, true, true>;
+    extern template class PythonEnv<false, true, false>;
+    extern template class PythonEnv<false, false, true>;
+    extern template class PythonEnv<false, false, false>;
+}

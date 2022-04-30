@@ -4,7 +4,9 @@ set(CMAKE_TOOLCHAIN_FILE $ENV{HOME}/vcpkg/scripts/buildsystems/vcpkg.cmake CACHE
 set(Torch_DIR $ENV{HOME}/libtorch/share/cmake/Torch CACHE STRING "Path to Torch ROOT DIR")
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 set(CMAKE_VISIBILITY_INLINES_HIDDEN YES)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS} -fPIC")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS} -ffat-lto-objects -fPIC")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
+
 project(gym)
 
 set(THIRD_PARTY ${CMAKE_CURRENT_LIST_DIR}/third_party)
@@ -14,11 +16,10 @@ set(BUILD_TEST ON)
 
 option(ADD_BOX2D OFF)
 option(ADD_ATARI OFF)
+option(ADD_PYTHON ON)
 
 include_directories(third_party ${OPENGL_INCLUDE_DIR} ${THIRD_PARTY}/viz_doom/include)
 
-find_package(pybind11 CONFIG REQUIRED)
-find_package(Catch2 CONFIG REQUIRED)
 find_package(box2d CONFIG REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(glfw3 3.3 )
@@ -31,15 +32,10 @@ find_package(Boost COMPONENTS filesystem thread system date_time chrono regex   
 find_package(Threads REQUIRED)
 
 set(DEPENDENCIES ${Boost_LIBRARIES}  ${ALE_LIB}
-		Catch2::Catch2 OpenGL::GL glfw box2d::box2d
-		${OpenCV_LIBS} ${TORCH_LIBRARIES} ${LIBVIZDOOM}  ${CMAKE_THREAD_LIBS_INIT}
-		pybind11::embed )
-
-set(GYM_TEST_FILES test/classic_control.cpp test/atari_env.cpp test/wrappers.cpp)
-
-message(STATUS "TORCH_LIBRARIES: ${TORCH_LIBRARIES}")
-message(STATUS "TORCH_INCLUDE_DIRS: ${TORCH_INCLUDE_DIRS}")
-message(STATUS "GL_INCLUDES: ${OPENGL_INCLUDE_DIR}")
+		 OpenGL::GL glfw box2d::box2d
+		${OpenCV_LIBS} ${TORCH_LIBRARIES} ${LIBVIZDOOM}
+		${CMAKE_THREAD_LIBS_INIT}
+		)
 
 add_library(gym STATIC "" common/tensor_adapter.cpp custom/dm_lab/lab.cpp)
 
@@ -61,7 +57,9 @@ if(${ADD_BOX2D})
 	add_subdirectory(box2d)
 endif()
 
+
 add_subdirectory(python_gym)
+
 
 install (TARGETS ${PROJECT_NAME}
 		RUNTIME DESTINATION bin
@@ -74,7 +72,16 @@ target_link_libraries(gym_main PRIVATE ${DEPENDENCIES} gym)
 target_include_directories(gym_main PRIVATE . )
 
 if(${BUILD_TEST})
+	find_package(Catch2 CONFIG REQUIRED)
+	LIST(APPEND GYM_TEST_FILES
+			#		test/classic_control.cpp
+			test/atari_env.cpp
+			#		test/wrappers.cpp
+			)
+
+	LIST(APPEND GYM_TEST_FILES  test/py_atari_env.cpp)
+
 	add_executable(GymTest ${GYM_TEST_FILES})
-	target_link_libraries(GymTest PRIVATE ${DEPENDENCIES} gym)
-	target_include_directories(GymTest PRIVATE .)
+	target_link_libraries(GymTest PRIVATE ${DEPENDENCIES} gym Catch2::Catch2  ${TORCH_LIBRARIES})
+	target_include_directories(GymTest PRIVATE .  ${OPENGL_INCLUDE_DIR} ${OpenCV_INCLUDE_DIRS} ${TORCH_INCLUDE_DIRS})
 endif()

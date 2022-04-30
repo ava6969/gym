@@ -50,9 +50,6 @@ namespace gym {
         inline bool goal_achieved() const noexcept { return m_CarPos >= GOAL_POS; }
 
     public:
-        using ObservationT = std::vector<double>;
-        using ActionT = int;
-        using StepT = StepResponse<ObservationT>;
 
         MountainCarEnv();
 

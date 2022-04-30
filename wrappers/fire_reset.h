@@ -9,7 +9,7 @@
 //#include "atari/atari_env.h"
 
 namespace gym {
-    struct FireResetEnv : public Wrapper< ObsT<true>, int> {
+    struct FireResetEnv : public Wrapper< Env< ObsT<true>, int> > {
 
     public:
         DEFAULT_RESET_OVERRIDE

@@ -66,18 +66,16 @@ namespace gym{
     };
 
     template<bool continuous>
-    class LunarLandarEnv : public Env<std::vector<float>,
-            std::conditional_t<continuous, int, std::vector<float> > > {
+    class LunarLandarEnv : public Env<std::vector<float>, std::conditional_t<continuous, int, std::vector<float> > > {
 
     public:
-        using ActionT =  std::conditional_t<continuous, int, std::vector<float> >;
         LunarLandarEnv();
 
         std::unique_ptr<class Viewer> m_Viewer;
 
         std::vector<float> reset()  noexcept final;
 
-        StepResponse< std::vector<float> > step(ActionT const& action) noexcept final;
+        StepResponse< std::vector<float> > step( ActionT const& action) noexcept final;
 
         void render(RenderType type) final;
 

@@ -9,20 +9,18 @@
 
 namespace gym {
 
-    template<class EnvType, bool dict=false>
+    template<bool dict=false>
     struct Worker;
 
-    template<class EnvType, bool dict>
-    class ASyncVecEnv : public SyncVecEnv<EnvType, dict> {
+    template<class BaseGymEnvT, bool dict>
+    class ASyncVecEnv : public SyncVecEnv<BaseGymEnvT, dict> {
 
     public:
-        using EnvT = EnvType;
 
-        ASyncVecEnv(std::vector< std::unique_ptr<
-                Env<typename EnvType::ObservationT, typename EnvType::ActionT>>> env,
+        explicit ASyncVecEnv(std::vector< std::unique_ptr<BaseGymEnvT>> env,
                     int max_threads=std::thread::hardware_concurrency(),
                     bool auto_reset=true):
-        SyncVecEnv<EnvType, dict>( std::move(env), auto_reset),
+        SyncVecEnv<BaseGymEnvT, dict>( std::move(env), auto_reset),
                 stop(false){
 
             if(this->numEnvs <= max_threads){
@@ -49,7 +47,7 @@ namespace gym {
                 }
             } else{
                 maxThreads = std::min<int>(max_threads != 0 ? max_threads : 2,
-                                            std::thread::hardware_concurrency());
+                                            int(std::thread::hardware_concurrency()) );
                 auto block_size = std::ceil(this->numEnvs / maxThreads );
                 allWaiting.assign(maxThreads, true);
                 int i = 0;
@@ -103,7 +101,7 @@ namespace gym {
             env_barrier->arrive_and_wait();
         }
 
-        inline typename  VecEnv<dict>::StepT stepWait() noexcept override{
+        inline typename  VecEnv< dict >::StepT stepWait() noexcept override{
             return this->complete();
         }
 
@@ -116,14 +114,14 @@ namespace gym {
             }
         }
 
-        inline typename VecEnv<dict>::ObservationT reset() noexcept override{
+        inline typename VecEnv< dict >::ObservationT reset() noexcept override{
             auto t = init_barrier->arrive(1);
             env_barrier->arrive_and_wait();
             return this->mergeObs();
         }
 
-        virtual typename VecEnv<dict>::ObservationT reset(int index) override{
-            return SyncVecEnv<EnvT, dict>::reset(index);
+        typename VecEnv< dict >::ObservationT reset(int index) override{
+            return SyncVecEnv< BaseGymEnvT, dict >::reset(index);
         }
 
     private:

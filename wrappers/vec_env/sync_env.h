@@ -6,8 +6,10 @@
 #define GYM_SYNC_ENV_H
 
 #include "base.h"
+#include "common/utils.h"
 #include "common/tensor_adapter.h"
 #include "torch/torch.h"
+#include "wrappers/monitor.h"
 
 namespace gym{
 
@@ -15,28 +17,19 @@ namespace gym{
     using infer_t_v = std::conditional_t<!dict, std::vector<torch::Tensor>,
             std::unordered_map<std::string, std::vector<torch::Tensor>>>;
 
-    template<class EnvType, bool dict=false>
-    class SyncVecEnv : public VecEnv<dict>{
+    template<class BaseGymEnvT, bool dict>
+    class SyncVecEnv : public VecEnv< dict >{
 
     public:
 
-        using EnvT = EnvType;
-
-        static auto make(std::vector< std::unique_ptr<
-                Env<typename EnvType::ObservationT, typename EnvType::ActionT>>> env,
-                bool auto_reset){
-            return std::make_unique<SyncVecEnv<EnvType, dict>>( std::move(env), auto_reset  );
-        }
-
         SyncVecEnv(std::shared_ptr<Space> o_space,
                    std::shared_ptr<Space> a_space,
-                   std::vector< std::unique_ptr<
-                   Env<typename EnvType::ObservationT, typename EnvType::ActionT>>> envs,
+                   std::vector< std::unique_ptr<BaseGymEnvT > > && envs,
                    bool auto_reset=true): VecEnv<dict>( envs.size(),
-                                                                       std::move(o_space),
-                                                                       std::move(a_space)),
-                                                                       envs( std::move( envs ) ),
-                                                                       m_AutoReset(auto_reset){
+                                                        std::move(o_space),
+                                                        std::move(a_space)),
+                                                        envs( std::move( envs ) ),
+                                                        m_AutoReset(auto_reset){
             m_BufRews .resize( this->numEnvs );
             m_BufDones.resize( this->numEnvs );
             m_BufInfos.resize( this->numEnvs );
@@ -48,11 +41,13 @@ namespace gym{
                 m_BufObs.resize(this->numEnvs );
         }
 
-        explicit SyncVecEnv(std::vector< std::unique_ptr<
-                Env<typename EnvType::ObservationT, typename EnvType::ActionT>>> env,
-        bool auto_reset=true):
-        VecEnv<dict>( env.size(), std::move(env[0]->observationSpace()), std::move(env[0]->actionSpace())),
-                envs( std::move( env ) ), m_AutoReset(auto_reset){
+        explicit SyncVecEnv(std::vector< std::unique_ptr< BaseGymEnvT > > && env, bool auto_reset=true):
+        VecEnv<dict>( env.size(),
+                      std::move(env[0]->observationSpace()),
+                      std::move(env[0]->actionSpace())),
+                envs( std::move( env ) ),
+                m_AutoReset(auto_reset){
+
             m_BufRews .resize( this->numEnvs );
             m_BufDones.resize( this->numEnvs );
             m_BufInfos.resize( this->numEnvs );
@@ -64,10 +59,14 @@ namespace gym{
                 m_BufObs.resize(this->numEnvs );
         }
 
+        static auto make(std::vector< std::unique_ptr< BaseGymEnvT > > && env, bool auto_reset){
+            return std::make_unique< SyncVecEnv<BaseGymEnvT, dict> >( std::move(env), auto_reset  );
+        }
+
         inline typename VecEnv<dict>::ObservationT reset() noexcept override{
             int i = 0;
             for (auto& env: envs) {
-                saveObs(i++, std::move( env->reset() ));
+                saveObs(i++, std::move( env->reset() ) );
             }
             return mergeObs();
         }
@@ -87,8 +86,8 @@ namespace gym{
             TensorAdapter::decode(_actions, m_Actions);
         }
 
-        inline void stepPerWorker( std::unique_ptr<Env<typename EnvType::ObservationT, typename EnvType::ActionT>>& env,
-                                   int rank)  noexcept{
+        inline void stepPerWorker( std::unique_ptr< BaseGymEnvT >& env, int rank)  noexcept{
+
             auto response = env->step( m_Actions[rank] );
             if( response.done && m_AutoReset ){
                 if(response.info.contains("episode")){
@@ -119,9 +118,10 @@ namespace gym{
             for(auto& env: envs){
                 stepPerWorker(env, i++);
             }
+
             return complete();
         }
-        virtual void render() const override{
+        void render() const override{
             this->envs[0]->render(RenderType::HUMAN);
         }
 
@@ -157,8 +157,8 @@ namespace gym{
         }
 
     protected:
-        mutable std::vector< std::unique_ptr< Env<typename EnvType::ObservationT, typename EnvType::ActionT>>> envs;
-        std::vector<typename EnvType::ActionT > m_Actions;
+        mutable std::vector< std::unique_ptr< BaseGymEnvT > > envs;
+        std::vector<typename BaseGymEnvT::ActionT > m_Actions;
         infer_t_v<dict> m_BufObs{};
         std::vector<int> completedWorkers;
         std::vector<float> m_BufRews{};
@@ -166,7 +166,7 @@ namespace gym{
         std::vector<AnyMap> m_BufInfos{};
         bool clearedInfo{false}, m_AutoReset{true};
 
-        inline void saveObs(int env_idx, typename EnvType::ObservationT && _obs ) {
+        inline void saveObs(int env_idx, typename BaseGymEnvT::ObservationT && _obs ) {
             if constexpr(dict) {
                 for (auto const &key: this->m_ObservationSpace->keys()){
                     this->m_BufObs[key][env_idx] = TensorAdapter::encode( std::move(_obs[key]) );

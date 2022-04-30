@@ -9,7 +9,7 @@
 
 namespace gym {
 
-    class MaxAndSkipEnv : public Wrapper< ObsT<true>, int> {
+    class MaxAndSkipEnv : public Wrapper< Env<ObsT<true>, int> > {
 
     private:
         std::array<cv::Mat, 2> m_ObsBuffer;

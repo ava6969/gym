@@ -12,15 +12,18 @@
 namespace gym {
 
 
-    template<class VenvT, bool dict, bool repeatAction>
-    class VecFrameSkip : public VecEnvWrapper<VenvT, dict> {
+    template<bool dict, bool repeatAction>
+    class VecFrameSkip : public VecEnvWrapper<dict> {
         int m_FramesToSkip{};
         int m_FramesSkipped{};
-        typename VenvT::StepT m_LastStep{};
+        typename VecEnv<dict>::StepT m_LastStep{};
 
     public:
-        explicit VecFrameSkip(std::unique_ptr <VenvT> env, int frames_to_skip) :
-        VecEnvWrapper<VenvT, dict> ( std::move(env)), m_FramesToSkip(frames_to_skip), m_FramesSkipped(0) {}
+        explicit VecFrameSkip(std::unique_ptr < VecEnv<dict> > env, int frames_to_skip) :
+        VecEnvWrapper<dict> (
+                std::move(env)),
+                m_FramesToSkip(frames_to_skip),
+                m_FramesSkipped(0) {}
 
         inline infer_type<dict> reset() noexcept override {
             m_FramesSkipped = 0;
@@ -32,7 +35,7 @@ namespace gym {
             return this->venv->reset(index);
         }
 
-        typename VenvT::StepT stepWait() noexcept override {
+        typename VecEnv<dict>::StepT stepWait() noexcept override {
             if constexpr(repeatAction){
                 return this->venv->stepWait();
             }
@@ -72,8 +75,8 @@ namespace gym {
 //            return stepData;
 //        }
 
-        static auto make(std::unique_ptr<VenvT> x, int frames_to_skip){
-            return std::make_unique<VecFrameSkip<VenvT, dict, repeatAction>>( std::move(x), frames_to_skip );
+        static auto make(std::unique_ptr<VecEnv<dict>> x, int frames_to_skip){
+            return std::make_unique<VecFrameSkip<dict, repeatAction>>( std::move(x), frames_to_skip );
         }
     };
 }

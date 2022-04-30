@@ -6,12 +6,12 @@
 #define GYMENV_WARP_FRAME_H
 
 #include "common/wrapper.h"
-//#include "atari/atari_env.h"
+#include "env.h"
 
 
 namespace gym {
 
-    class WarpFrameEnv : public ObservationWrapper< ObsT<true>, int> {
+    class WarpFrameEnv : public ObservationWrapper< Env< ObsT<true>, int> > {
 
     private:
         int m_Width{}, m_Height{};
@@ -21,7 +21,7 @@ namespace gym {
         WarpFrameEnv(std::unique_ptr<Env<ObsT<true>, int>> env,
                      int width,
                      int height):
-                     ObservationWrapper<ObsT<true>, int>(std::move(env)),
+                     ObservationWrapper< Env< ObsT<true>, int> >(std::move(env)),
                 m_Width(width),
                 m_Height(height){
 
@@ -42,7 +42,7 @@ namespace gym {
             cv::cvtColor(raw_img, raw_img, cv::COLOR_RGB2GRAY);
             cv::resize(raw_img, raw_img,
                        {m_Width, m_Height},
-                       0, 0, INTER_AREA);
+                       0, 0, cv::INTER_AREA);
             return std::move(raw_img);
         }
     };

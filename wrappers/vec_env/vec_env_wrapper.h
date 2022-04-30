@@ -9,12 +9,12 @@
 
 namespace gym {
 
-    template<typename VenvType, bool dict>
+    template<bool dict>
     class VecEnvWrapper : public VecEnv<dict> {
 
     public:
         VecEnvWrapper()=default;
-        explicit VecEnvWrapper( std::unique_ptr< VenvType > venv,
+        explicit VecEnvWrapper( std::unique_ptr< VecEnv<dict> > venv,
                       std::shared_ptr<Space> o_space=nullptr,
                       std::shared_ptr<Space> a_space=nullptr):VecEnv<dict>( venv->nEnvs(),
                                                                        std::move(o_space),
@@ -26,7 +26,7 @@ namespace gym {
                 this->m_ActionSpace = this->venv->actionSpace();
         }
 
-        inline typename VenvType::ObservationT reset() noexcept override{
+        inline typename VecEnv<dict>::ObservationT reset() noexcept override{
             return venv->reset();
         }
 
@@ -36,7 +36,7 @@ namespace gym {
 
         virtual void render() const { this->venv->render(); }
 
-        typename VenvType::StepT stepWait() noexcept override{
+        typename VecEnv<dict>::StepT stepWait() noexcept override{
             return venv->stepWait();
         }
 
@@ -44,14 +44,14 @@ namespace gym {
             return venv->seed( _seed );
         }
 
-        virtual typename VenvType::ObservationT reset(int index) { return venv->reset(index); }
+        virtual typename VecEnv<dict>::ObservationT reset(int index) { return venv->reset(index); }
 
-        inline typename VenvType::StepT step(int index, torch::Tensor const& action) noexcept{
+        inline typename VecEnv<dict>::StepT step(int index, torch::Tensor const& action) noexcept{
             return venv->step(index, action);
         }
 
     protected:
-        std::unique_ptr< VenvType > venv{nullptr};
+        std::unique_ptr< VecEnv<dict> > venv{nullptr};
     };
 }
 

@@ -7,6 +7,7 @@
 
 #include "common/wrapper.h"
 #include <tuple>
+#include <filesystem>
 
 namespace gym {
 
@@ -34,18 +35,14 @@ namespace gym {
     };
 
     template<class EnvType, bool allowEarlyResets=true>
-    class __attribute__ ((visibility("hidden"))) Monitor : public Wrapper<typename EnvType::ObservationT,
-            typename EnvType::ActionT,
-            typename EnvType::StepT>{
+    class __attribute__ ((visibility("hidden"))) Monitor : public Wrapper<EnvType>{
 
     public:
-        Monitor(std::unique_ptr< Env<typename EnvType::ObservationT, typename EnvType::ActionT> > env,
-                std::optional<int> invalid_returns,
+        explicit Monitor(std::unique_ptr< EnvType > env,
+                std::optional<double> invalid_returns=std::numeric_limits<double>::max(),
                 std::string const& id = "",
                 std::filesystem::path const& fileName = ""):
-                Wrapper<typename EnvType::ObservationT,
-                        typename EnvType::ActionT,
-                        typename EnvType::StepT>( std::move(env) ), invalid_returns(invalid_returns){
+                Wrapper<EnvType>( std::move(env) ), invalid_returns(invalid_returns){
 
             this->t_start = std::chrono::high_resolution_clock::now();
             if( not fileName.empty() ){
@@ -109,13 +106,6 @@ namespace gym {
         inline auto getEpisodeLengths() const noexcept { return episodeLengths; }
         inline auto getEpisodeTimes() const noexcept { return episodeTimes; }
 
-        auto make(std::unique_ptr< Env<typename EnvType::ObservationT, typename EnvType::ActionT> > env,
-                  std::optional<int> invalid_returns,
-                  std::string const& id = "",
-                  std::filesystem::path const& fileName = ""){
-            return std::make_unique< Monitor<EnvType, allowEarlyResets> >( std::move(env), invalid_returns, id, fileName);
-        }
-
     private:
         decltype(std::chrono::high_resolution_clock::now()) t_start;
         std::optional<ResultWriter> writer;
@@ -126,7 +116,7 @@ namespace gym {
         std::vector<float> reward{};
         float _steps{};
         bool needsReset{true};
-        std::optional<int> invalid_returns;
+        std::optional<double> invalid_returns;
     };
 }
 

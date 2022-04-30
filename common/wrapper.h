@@ -80,22 +80,17 @@
         }
     };
 
-    template<typename ObservationType,
-            typename ActionType,
-            typename  StepType=StepResponse<ObservationType>>
-    class Wrapper : public Env<ObservationType, ActionType, StepType> {
+#define ENV_MACRO(EnvT) Env<typename EnvT::ObservationT, typename EnvT::ActionT, typename EnvT::StepT>
+
+    template<typename EnvT>
+    class Wrapper : public ENV_MACRO(EnvT) {
 
     protected:
-        std::shared_ptr<Env<ObservationType, ActionType, StepType>> m_Env;
+        std::shared_ptr<EnvT> m_Env;
 
     public:
 
-        using StepT = StepType;
-        using ActionT = ActionType;
-        using ObservationT = ObservationType;
-
-        explicit Wrapper(std::unique_ptr<Env<ObservationType, ActionType,StepType >> env):
-        m_Env( std::move(env) ){
+        explicit Wrapper(std::unique_ptr<EnvT> env):m_Env( std::move(env) ){
             this->m_ObservationSpace = this->m_Env->observationSpace();
             this->m_ActionSpace = this->m_Env->actionSpace();
         }
@@ -108,8 +103,9 @@
 
         Wrapper( Wrapper&& ) noexcept = default;
         Wrapper( Wrapper const& ) = default;
-        Wrapper<ObservationType, ActionType, StepType>& operator=(Wrapper<ObservationType, ActionType, StepType>&& x) noexcept= default;
-        Wrapper<ObservationType, ActionType, StepType>& operator=(Wrapper<ObservationType, ActionType, StepType> const& x) noexcept= default;
+
+        Wrapper<EnvT>& operator=(Wrapper<EnvT>&& x) noexcept= default;
+        Wrapper<EnvT>& operator=(Wrapper<EnvT> const& x) noexcept= default;
 
         inline void render(RenderType type) override{
             return m_Env->render(type);
@@ -123,19 +119,20 @@
             m_Env->seed(seed);
         }
 
-        inline StepType step(const ActionType &action) noexcept override{
+        inline typename Wrapper<EnvT>::StepT step(const typename Wrapper<EnvT>::ActionT &action) noexcept override{
             return m_Env->step(action);
         }
 
-        inline ObservationType reset() noexcept override {
+        inline typename Wrapper<EnvT>::ObservationT reset() noexcept override {
             return m_Env->reset();
         }
 
-        inline virtual StepType step(StepType&& prevStep) noexcept {
+        inline virtual typename Wrapper<EnvT>::StepT  step(typename Wrapper<EnvT>::StepT && prevStep) noexcept {
             return prevStep;
         }
 
-        inline virtual ObservationType reset(ObservationType&& x) noexcept  {
+        inline virtual typename Wrapper<EnvT>::ObservationT
+        reset(typename Wrapper<EnvT>::ObservationT && x) noexcept  {
             return x;
         }
 
@@ -153,82 +150,80 @@
         }
     };
 
-    template<typename ObservationType,
-            typename ActionType,
-            typename  StepType>
-    class ActionWrapper : public Wrapper<ObservationType, ActionType, StepType>{
+    template<typename EnvT>
+    class ActionWrapper : public Wrapper<EnvT>{
 
     public:
-        explicit ActionWrapper(std::unique_ptr<Env<ObservationType, ActionType, StepType>> env):
-        Wrapper<ObservationType, ActionType, StepType>(std::move(env))
+        explicit ActionWrapper(std::unique_ptr<EnvT> env):Wrapper<EnvT>(std::move(env))
         {}
 
         virtual torch::Tensor action(torch::Tensor const& action) const noexcept = 0;
 
         virtual torch::Tensor reverseAction(torch::Tensor const& action) const noexcept = 0;
 
-        inline StepResponse<ObservationType> step(const torch::Tensor &_action) noexcept override{
+        inline typename ActionWrapper<EnvT>::StepT step(
+                const typename ActionWrapper<EnvT>::ActionT &_action) noexcept override{
             return this->m_Env->step(action(_action));
         }
 
-        inline ObservationType reset() noexcept override { return this->m_Env->reset(); }
+        inline typename ActionWrapper<EnvT>::ObservationT  reset() noexcept override { return this->m_Env->reset(); }
     };
 
-    template<typename ObservationType,
-            typename ActionType,
-            typename  StepType=StepResponse<ObservationType>>
-    class RewardWrapper : public Wrapper<ObservationType, ActionType, StepType>{
+    template<typename EnvT>
+    class RewardWrapper : public Wrapper<EnvT>{
 
     public:
-        explicit RewardWrapper(std::unique_ptr< Env<ObservationType, ActionType, StepType> > env):
-        Wrapper<ObservationType, ActionType, StepType>(std::move(env)){}
+        explicit RewardWrapper(std::unique_ptr< EnvT > env):Wrapper<EnvT>(std::move(env)){}
 
         explicit RewardWrapper(std::shared_ptr<Space> obsSpace, std::shared_ptr<Space> actSpace ):
-        Wrapper<ObservationType, ActionType, StepType>( obsSpace, actSpace ) {}
+        Wrapper<EnvT>( obsSpace, actSpace ) {}
 
         [[nodiscard]] virtual float reward(float const& reward) const noexcept = 0;
 
-        inline StepResponse<ObservationType> step(const int &action) noexcept override{
+        inline typename ActionWrapper<EnvT>::StepT step(const int &action) noexcept override{
             auto resp = this->m_Env->step(action);
             resp.reward = reward(resp.reward);
             return resp;
         }
 
-        StepType step(StepType && prevStep) noexcept override{
+        typename ActionWrapper<EnvT>::StepT step(typename ActionWrapper<EnvT>::StepT && prevStep) noexcept override{
             auto resp = prevStep;
             resp.reward = reward(resp.reward);
             return resp;
         }
     };
 
-    template<typename ObservationType, typename ActionType,
-            typename  StepType=StepResponse<ObservationType>>
-    class ObservationWrapper : public Wrapper<ObservationType, ActionType, StepType>{
+    template<typename EnvT>
+    class ObservationWrapper : public Wrapper<EnvT>{
 
     public:
         explicit
-        ObservationWrapper(std::unique_ptr< Env<ObservationType, ActionType, StepType> > env):
-        Wrapper<ObservationType, ActionType, StepType>( std::move(env)) {}
+        ObservationWrapper(std::unique_ptr< EnvT > env):Wrapper<EnvT>( std::move(env)) {}
 
-        explicit ObservationWrapper(std::shared_ptr<Space> obsSpace, std::shared_ptr<Space> actSpace ):
-                Wrapper<ObservationType, ActionType, StepType>( std::move(obsSpace), actSpace ) {}
+        explicit ObservationWrapper(std::shared_ptr<Space> obsSpace,
+                                    std::shared_ptr<Space> actSpace ):
+                Wrapper<EnvT>( std::move(obsSpace), actSpace ) {}
 
-        virtual ObservationType observation(ObservationType&& ) const noexcept = 0;
+        virtual typename Wrapper<EnvT>::ObservationT observation(
+                typename Wrapper<EnvT>::ObservationT&& ) const noexcept = 0;
 
         inline
-        StepResponse<ObservationType> step(const ActionType &action) noexcept override {
+        typename Wrapper<EnvT>::StepT step(const typename Wrapper<EnvT>::ActionT &action) noexcept override {
             auto resp = this->m_Env->step(action);
             resp.observation = observation(std::move(resp.observation));
             return resp;
         }
 
-        inline ObservationType reset() noexcept override { return observation(this->m_Env->reset()); }
+        inline typename Wrapper<EnvT>::ObservationT reset() noexcept override {
+            return observation(this->m_Env->reset());
+        }
 
-        inline StepType step(StepType&& resp) noexcept override{
+        inline typename Wrapper<EnvT>::StepT step(
+                typename Wrapper<EnvT>::StepT && resp) noexcept override{
             return {observation(std::move(resp.observation)), resp.reward, resp.done, resp.info};
         }
 
-        ObservationType reset(ObservationType&& x) noexcept override{
+        typename Wrapper<EnvT>::ObservationT reset(typename Wrapper<EnvT>::ObservationT&& x) noexcept override{
             return observation( std::move(x) );
         }
     };

@@ -18,7 +18,7 @@
 #define PY_ENV_ID "CartPole-v1"
 
 template<class EnvT, size_t N, size_t N_env>
-void test_run(std::string const& id, gym::OptionalArgMap const& arg=std::nullopt){
+void test_run(std::string const& id, gym::Kwargs const& arg=std::nullopt){
 
     using MonitorT = gym::MonitorWithEarlyReset<EnvT>;
     using VecMonitorT = gym::SyncVecEnv<MonitorT>;
@@ -42,7 +42,7 @@ void test_run(std::string const& id, gym::OptionalArgMap const& arg=std::nullopt
 }
 
 template<class EnvT, class actionT, size_t N>
-void test_run( gym::OptionalArgMap const& args=std::nullopt ){
+void test_run( gym::Kwargs const& args=std::nullopt ){
 
     auto env = std::make_unique< gym::TimeLimit<EnvT> >( std::make_unique<EnvT>(args), std::nullopt, std::nullopt );
 
@@ -67,7 +67,7 @@ void test_run( gym::OptionalArgMap const& args=std::nullopt ){
 }
 
 template<class VecEnvT, size_t N, size_t N_env>
-void p_test_run(gym::OptionalArgMap const& args=std::nullopt){
+void p_test_run(gym::Kwargs const& args=std::nullopt){
 
     using EnvT = typename VecEnvT::EnvT;
 

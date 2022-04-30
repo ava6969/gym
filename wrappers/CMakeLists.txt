@@ -1,4 +1,4 @@
-
+add_subdirectory(vec_env)
 if(${ADD_ATARI})
     target_sources(gym PRIVATE atari_wrappers.cpp)
 endif()

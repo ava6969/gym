@@ -1,5 +1,7 @@
+include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
+add_subdirectory(ale)
 
-file(GLOB ALE_LIB ../third_party/lib/libale.a)
-target_link_libraries(${PROJECT_NAME} PUBLIC ${ALE_LIB})
-target_include_directories(${PROJECT_NAME} PUBLIC ../third_party/include ../third_party/include/ale)
-target_sources(${PROJECT_NAME} PUBLIC atari_env.tpp)
+find_package(SDL2 CONFIG REQUIRED)
+target_include_directories(${PROJECT_NAME} PUBLIC ale)
+target_link_libraries(${PROJECT_NAME} PUBLIC SDL2::SDL2)
+target_sources(${PROJECT_NAME} PRIVATE atari_env.cpp ale_c_wrapper.cpp)
