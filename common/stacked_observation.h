@@ -68,16 +68,19 @@ namespace gym{
                 return stackObservationSpace( boxSpace, key );
             else if( auto uIntSpace = _space->as<gym::space::Box<uint8_t>>() ){
                 return stackObservationSpace( uIntSpace, key );
-            }else{
-                throw std::runtime_error("Not Implemented\n");
+            }
+            else{
+                excludes.insert(key);
+                std::cerr << "Not Stacking [" << key << "]\n";
+                return _space;
             }
 
         }
 
-        std::shared_ptr<gym::Space> stackObservationSpace(std::shared_ptr<gym::ADict> const& space){
+        std::shared_ptr<gym::Space> stackObservationSpace(gym::ADict* space){
             gym::space::NamedSpaces spaces;
             for( auto const& [name, _space] : space->namedSpaces() ){
-                spaces[name] = stackObservationSpace( _space, name );
+                spaces[name] = stackObservationSpace( _space->clone(), name );
             }
             return std::make_shared<gym::ADict>( spaces );
         }
@@ -109,7 +112,10 @@ namespace gym{
 
             if constexpr(dict){
                 for (auto const& [key, obs]: x) {
-                    reset(stackedObs[key], obs, stackDimension[key], channelFirst[key]);
+                    if(not excludes.contains(key))
+                        reset(stackedObs[key], obs, stackDimension[key], channelFirst[key]);
+                    else
+                        stackedObs[key] = obs;
                 }
             }else{
                 reset(stackedObs, x, stackDimension, channelFirst);
@@ -125,9 +131,11 @@ namespace gym{
 
         auto update(infer<> const& x){
             if constexpr( dict){
-                for (auto const& entry : x) {
-                    auto const& [key, obs] = entry;
-                    update(stackedObs[key], obs, stackDimension[key], channelFirst[key]);
+                for (auto const& [key, obs] : x) {
+                    if(not excludes.contains(key))
+                        update(stackedObs[key], obs, stackDimension[key], channelFirst[key]);
+                    else
+                        stackedObs[key] = obs;
                 }
             }else{
                 update(stackedObs, x, stackDimension, channelFirst);
@@ -142,6 +150,7 @@ namespace gym{
         infer<int> stackDimension{};
         infer<torch::Tensor> stackedObs{};
         infer<int> repeatAxis{};
+        std::set<std::string> excludes;
 
         static bool isImageSpaceChannelsFirst(std::shared_ptr<Space> const&  space){
             auto sz = space->size();
