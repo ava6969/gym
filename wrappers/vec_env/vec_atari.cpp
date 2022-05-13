@@ -70,6 +70,7 @@ namespace gym {
     template<bool dict> [[nodiscard]]  torch::Tensor VecNormAndPermute<dict>::observation(torch::Tensor const &x)
     const noexcept
     {
+
         auto y = x.dim() == 4 ? x.permute({0, 3, 1, 2}) : x.permute({0, 1, 4, 2, 3});
         if (norm)
             y = y / 255;

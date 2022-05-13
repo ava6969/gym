@@ -84,7 +84,7 @@ namespace gym{
     template<bool dict, bool cont, bool atari>
     std::unique_ptr<Space> PythonEnv<dict, cont, atari>::fromPythonSpace(const py::object &space, const py::module_ &gym) {
 
-        if(py::isinstance(space, gym.attr("spaces").attr("box").attr("Box"))){
+        if(py::isinstance(space, gym.attr("m_Space").attr("box").attr("Box"))){
             auto low = space.attr("low");
             auto high = space.attr("high");
             auto shape = space.attr("shape").cast<py::tuple>();
@@ -122,12 +122,12 @@ namespace gym{
             }else{
                 throw std::runtime_error("only support float, int, uint dtype ");
             }
-        }else if(py::isinstance(space, gym.attr("spaces").attr("discrete").attr("Discrete"))){
+        }else if(py::isinstance(space, gym.attr("m_Space").attr("discrete").attr("Discrete"))){
             return makeDiscreteSpace(space.attr("n").cast<uint64_t>());
-        }else if(py::isinstance(space, gym.attr("spaces").attr("dict").attr("Dict"))){
+        }else if(py::isinstance(space, gym.attr("m_Space").attr("dict").attr("Dict"))){
 
             NamedSpaces spaces;
-            for(auto const& entry: space.attr("spaces").cast<py::dict>()){
+            for(auto const& entry: space.attr("m_Space").cast<py::dict>()){
                 spaces.emplace(entry.first.cast<std::string>(),
                                fromPythonSpace(entry.second.cast<py::object>(), gym));
             }

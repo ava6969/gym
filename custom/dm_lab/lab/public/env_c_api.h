@@ -72,8 +72,8 @@
 //   same major version. However, when changing major versions, migration
 //   may be required.
 //
-// In other words, evolution within one major version can add new features
-// and deprecate existing features (and provide replacements), but cannot
+// In other words, evolution within one major version can add new m_State
+// and deprecate existing m_State (and provide replacements), but cannot
 // remove or change the meaning of an existing feature. Ideally, if a feature
 // is changed incompatibly in a major version change, the previous version
 // should provide a migration path so that clients and the API can be upgraded

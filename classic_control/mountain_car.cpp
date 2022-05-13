@@ -7,7 +7,7 @@
 namespace gym{
 
     gym::MountainCarEnv::MountainCarEnv() {
-        // Define observation and action spaces
+        // Define observation and action m_Space
         m_ObservationSpace = makeBoxSpace<float>(2);
         m_ActionSpace = makeDiscreteSpace(3);
 

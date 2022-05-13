@@ -171,7 +171,7 @@ namespace gym{
                 for (auto const &key: this->m_ObservationSpace->keys()){
                     this->m_BufObs[key][env_idx] = TensorAdapter::encode( std::move(_obs[key]) );
                 }
-            } else {
+            }else {
                 this->m_BufObs[env_idx] = TensorAdapter::encode( std::move(_obs) );
             }
         }
