@@ -3,7 +3,7 @@
 //
 
 #include <numeric>
-#include "dm_lab/dm_lab.h"
+#include "custom/dm_lab.h"
 #include "algorithm"
 #include "chrono"
 
@@ -130,7 +130,6 @@ int DMLabMultiPlayer(){
 }
 
 int main(){
-
     return DMLabSinglePlayer();
 
 }

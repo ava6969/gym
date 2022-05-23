@@ -48,7 +48,7 @@ namespace gym {
                     std::uniform_int_distribution<int>(1, m_NoopMax + 1)(this->m_Device));
 
             assert(noops > 0);
-            // obs = np.zeros(0) ignore since observation is replaced anyway
+            // toTensor = np.zeros(0) ignore since observation is replaced anyway
             while (noops-- > 0){
                 resp = this->m_Env->step(m_NoopAction);
                 if(resp.done)

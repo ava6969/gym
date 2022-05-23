@@ -162,4 +162,55 @@ namespace gym{
 
         return result;
     }
+
+    template<size_t N, typename T> static inline
+    std::conditional_t< (N > 1), std::array<T, N>, T> uniformRandom( std::vector<T> const& list,
+                                                                     std::mt19937  generator){
+        std::array<T, N> result{};
+        std::sample(list.begin(), list.end(), result.begin(), N, generator);
+
+        if constexpr(N > 1){
+            return result;
+        }else{
+            return result[0];
+        }
+    }
+
+    template<class T, class K>
+    int floor_div(T&& dividend, K&& divisor){
+        return static_cast<int>( std::floor( std::forward<T>(dividend) / std::forward<T>(divisor)) );
+    }
+
+    template<bool single, typename Cont, typename Gen> static inline
+    std::conditional_t< (not single), std::vector<typename Cont::value_type>, typename Cont::value_type> sample(
+            size_t N, Cont const& list, Gen && generator){
+        std::vector<typename Cont::value_type> result(N);
+        std::sample(list.begin(), list.end(), result.begin(), N, std::forward<Gen>(generator) );
+
+        if constexpr(not single){
+            return result;
+        }else{
+            return result[0];
+        }
+    }
+
+    template<typename Cont> static inline
+    std::vector<typename Cont::value_type> choice(
+            size_t N, Cont const& list){
+        std::vector<typename Cont::value_type> result(N);
+        std::generate(result.begin(), result.end(), [&list](){
+            std::random_device r;                                       // 1
+            std::seed_seq seed{r(), r()}; // 2
+            return sample<true>(1, list, std::mt19937(seed));
+        });
+
+        return result;
+
+    }
+
+    template<typename Cont, typename T>
+    inline bool contains(Cont&& x, T const& y){
+        return std::find( std::begin(x), std::end(x), y) != std::end(x);
+    }
+
 }

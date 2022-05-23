@@ -8,11 +8,11 @@
 //namespace gym{
 //
 //    std::unordered_map<std::string, DMObservation> Lab::observation(){
-//        std::unordered_map<std::string, DMObservation> obs;
+//        std::unordered_map<std::string, DMObservation> toTensor;
 //        for(auto const&[name, data] : m_Lab.observations()){
-//            obs[name] = data;
+//            toTensor[name] = data;
 //        }
-//        return obs;
+//        return toTensor;
 //    }
 //
 //    TimeStep<DMObservationMap> Lab::step(const std::map<std::string, int> &action) {

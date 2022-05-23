@@ -17,6 +17,8 @@ set(BUILD_TEST ON)
 option(ADD_BOX2D OFF)
 option(ADD_ATARI OFF)
 option(ADD_PYTHON ON)
+option(ADD_PROCGEN OFF)
+
 
 include_directories(third_party ${OPENGL_INCLUDE_DIR} ${THIRD_PARTY}/viz_doom/include)
 
@@ -48,6 +50,7 @@ add_subdirectory(common)
 add_subdirectory(spaces)
 add_subdirectory(classic_control)
 add_subdirectory(wrappers)
+add_subdirectory(custom)
 
 if(${ADD_ATARI})
 	add_subdirectory(atari)
@@ -57,9 +60,14 @@ if(${ADD_BOX2D})
 	add_subdirectory(box2d)
 endif()
 
+if(${BUILD_TEST})
+	find_package(Catch2 CONFIG REQUIRED)
+	add_subdirectory(test)
+	target_link_libraries(GymTest PRIVATE ${DEPENDENCIES} gym)
+	target_include_directories(GymTest PRIVATE .)
+endif()
 
 add_subdirectory(python_gym)
-
 
 install (TARGETS ${PROJECT_NAME}
 		RUNTIME DESTINATION bin
@@ -70,18 +78,3 @@ install (FILES env.h DESTINATION include/gym )
 add_executable(gym_main main.cpp)
 target_link_libraries(gym_main PRIVATE ${DEPENDENCIES} gym)
 target_include_directories(gym_main PRIVATE . )
-
-if(${BUILD_TEST})
-	find_package(Catch2 CONFIG REQUIRED)
-	LIST(APPEND GYM_TEST_FILES
-			#		test/classic_control.cpp
-			test/atari_env.cpp
-			#		test/wrappers.cpp
-			)
-
-	LIST(APPEND GYM_TEST_FILES  test/py_atari_env.cpp)
-
-	add_executable(GymTest ${GYM_TEST_FILES})
-	target_link_libraries(GymTest PRIVATE ${DEPENDENCIES} gym Catch2::Catch2  ${TORCH_LIBRARIES})
-	target_include_directories(GymTest PRIVATE .  ${OPENGL_INCLUDE_DIR} ${OpenCV_INCLUDE_DIRS} ${TORCH_INCLUDE_DIRS})
-endif()

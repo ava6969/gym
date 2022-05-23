@@ -398,10 +398,10 @@ struct EnvCApi_s {
   // 'start'. Moreover, if 'advance' is called, no further function from this
   // section shall be called unless the returned status was "Running".
 
-  // Writes the observation at the given index to '*obs'
+  // Writes the observation at the given index to '*toTensor'
   //
   // 'observation_idx' shall be in range [0, observation_count()).
-  // 'obs' is invalidated by any other API call.
+  // 'toTensor' is invalidated by any other API call.
   void (*observation)(void* context, int observation_idx,
                       EnvCApi_Observation* obs);
 

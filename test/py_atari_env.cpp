@@ -2,8 +2,10 @@
 // Created by dewe on 8/31/21.
 //
 
-#include <python_gym/python_env.h>
+#define CATCH_CONFIG_MAIN
 #include "catch.hpp"
+
+#include <python_gym/python_env.h>
 #include "atari/atari_env.h"
 #include "wrappers/vec_env/vec_atari.h"
 #include "wrappers/vec_env/sync_env.h"
@@ -13,7 +15,7 @@ constexpr bool continuous_action_type = false;
 constexpr bool atari_env_type = true;
 
 using EnvT = gym::PythonEnv<dict_observation_type, continuous_action_type, atari_env_type>;
-using SyncT = gym::SyncVecEnv<EnvT>;
+using SyncT = gym::SyncVecEnv<EnvT, false>;
 
 TEST_CASE("Py Air Raid"){
 
@@ -38,7 +40,7 @@ TEST_CASE("Py Air Raid"){
     }
 }
 
-TEST_CASE("Atari Processing"){
+TEST_CASE("Py Atari Processing"){
 
     std::vector< std::unique_ptr< EnvT > > envs;
     envs.emplace_back( std::make_unique< EnvT >( "AirRaid-v0" ) );

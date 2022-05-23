@@ -2,9 +2,6 @@
 // Created by dewe on 8/31/21.
 //
 
-#ifndef CATCH_CONFIG_MAIN
-#define CATCH_CONFIG_MAIN
-#endif
 
 #include "catch.hpp"
 #include "atari/atari_env.h"
@@ -15,7 +12,7 @@
 
 
 using EnvT = gym::AtariEnv<true>;
-using SyncT = gym::SyncVecEnv< gym::Env<cv::Mat, int> >;
+using SyncT = gym::SyncVecEnv< gym::Env<cv::Mat, int>, false >;
 
 TEST_CASE("Air Raid"){
 
