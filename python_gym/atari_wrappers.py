@@ -46,7 +46,6 @@ class NoopResetEnv(gym.Wrapper):
                 obs = self.env.reset(**kwargs)
         return obs
 
-
 class FireResetEnv(gym.Wrapper):
     """
     Take action on reset for environments that are fixed until firing.
@@ -68,7 +67,6 @@ class FireResetEnv(gym.Wrapper):
         if done:
             self.env.reset(**kwargs)
         return obs
-
 
 class EpisodicLifeEnv(gym.Wrapper):
     """
@@ -114,7 +112,6 @@ class EpisodicLifeEnv(gym.Wrapper):
         self.lives = self.env.unwrapped.ale.lives()
         return obs
 
-
 class MaxAndSkipEnv(gym.Wrapper):
     """
     Return only every ``skip``-th frame (frameskipping)
@@ -157,7 +154,6 @@ class MaxAndSkipEnv(gym.Wrapper):
     def reset(self, **kwargs) -> GymObs:
         return self.env.reset(**kwargs)
 
-
 class ClipRewardEnv(gym.RewardWrapper):
     """
     Clips the reward to {+1, 0, -1} by its sign.
@@ -176,7 +172,6 @@ class ClipRewardEnv(gym.RewardWrapper):
         :return:
         """
         return np.sign(reward)
-
 
 class WarpFrame(gym.ObservationWrapper):
     """

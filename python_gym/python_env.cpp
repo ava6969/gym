@@ -57,8 +57,8 @@ namespace gym{
         if(m_Interpreter == nullptr){
             m_Interpreter = std::make_unique<py::scoped_interpreter>();
             auto sys = py::module_::import("sys");
-            sys.attr("path").attr("append")("/home/dewe/anaconda3/lib/python3.8");
-            sys.attr("path").attr("append")("/home/dewe/anaconda3/lib/python3.8/site-packages");
+//            sys.attr("path").attr("append")("/home/dewe/anaconda3/lib/python3.8");
+//            sys.attr("path").attr("append")("/home/dewe/anaconda3/lib/python3.8/site-packages");
             py::print( sys.attr("path"));
             py::print( sys.attr("executable"));
         }
