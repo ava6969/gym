@@ -4,7 +4,7 @@ set(CMAKE_TOOLCHAIN_FILE $ENV{HOME}/vcpkg/scripts/buildsystems/vcpkg.cmake CACHE
 set(Torch_DIR $ENV{HOME}/libtorch/share/cmake/Torch CACHE STRING "Path to Torch ROOT DIR")
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 set(CMAKE_VISIBILITY_INLINES_HIDDEN YES)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS} -ffat-lto-objects -fPIC")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS} -ffat-lto-objects -fPIC ")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
 
 project(gym)
@@ -33,9 +33,15 @@ find_package(Torch REQUIRED)
 find_package(Boost COMPONENTS filesystem thread system date_time chrono regex   REQUIRED)
 find_package(Threads REQUIRED)
 
-set(DEPENDENCIES ${Boost_LIBRARIES}  ${ALE_LIB}
-		 OpenGL::GL glfw box2d::box2d
-		${OpenCV_LIBS} ${TORCH_LIBRARIES} ${LIBVIZDOOM}
+set(DEPENDENCIES
+		${Boost_LIBRARIES}
+		${ALE_LIB}
+		 OpenGL::GL
+		glfw
+		box2d::box2d
+		${OpenCV_LIBS}
+		${TORCH_LIBRARIES}
+		${LIBVIZDOOM}
 		${CMAKE_THREAD_LIBS_INIT}
 		)
 
@@ -76,5 +82,13 @@ install (TARGETS ${PROJECT_NAME}
 install (FILES env.h DESTINATION include/gym )
 
 add_executable(gym_main main.cpp)
-target_link_libraries(gym_main PRIVATE ${DEPENDENCIES} gym)
+target_link_libraries(gym_main PRIVATE ${DEPENDENCIES} gym )
 target_include_directories(gym_main PRIVATE . )
+
+add_executable(minigrid_ctrl custom/minigrid/manual_control.cpp  )
+target_link_libraries(minigrid_ctrl PRIVATE ${DEPENDENCIES} gym )
+target_include_directories(minigrid_ctrl PRIVATE .)
+
+get_target_property(TARGET_LIBRARIES gym LINK_LIBRARIES)
+message("Libraries at start")
+message(${TARGET_LIBRARIES})

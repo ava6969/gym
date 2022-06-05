@@ -3,7 +3,7 @@ if(MSVC)
     message("All Custom Environments are deactivated in Windows")
 else()
     add_subdirectory(box_world)
-
+    add_subdirectory(minigrid)
     if(${ADD_PROCGEN})
         # include qt5
         set(CMAKE_PREFIX_PATH ${SAM_PATH}/thirdparty/qt)
@@ -12,6 +12,7 @@ else()
 
         add_subdirectory(procgen)
     endif()
+
 #    add_subdirectory(vizdoom)
 #    add_subdirectory(dm_lab)
 endif()
