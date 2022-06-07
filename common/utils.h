@@ -181,6 +181,21 @@ namespace gym{
         return static_cast<int>( std::floor( std::forward<T>(dividend) / std::forward<T>(divisor)) );
     }
 
+    template<class OutT, class T>
+    inline auto flattenSpace( Box<T>* boxCastToFlatten, int SpaceLengthAddition=0 ){
+        assert(boxCastToFlatten);
+        auto shape = boxCastToFlatten->size();
+        auto flatten = [](auto const& cont) -> int{
+            return std::accumulate(cont.begin(), cont.end(), 1, [](auto a, auto b){
+                return a * b;
+            });
+        };
+        auto flattened = flatten(shape);
+        std::vector<T> lo, hi;
+        boxCastToFlatten->getRange(lo, hi);
+        return makeBoxSpace<OutT>( lo[0], hi[0], {flattened+SpaceLengthAddition});
+    }
+
     template<bool single, typename Cont, typename Gen> static inline
     std::conditional_t< (not single), std::vector<typename Cont::value_type>, typename Cont::value_type> sample(
             size_t N, Cont const& list, Gen && generator){

@@ -7,7 +7,11 @@
 namespace mg{
 
 
-    Grid::Grid(const Grid &_clone): Grid(_clone.width, _clone.height) {}
+    Grid::Grid(const Grid &_clone){
+        width = _clone.width;
+        height = _clone.height;
+        grid = _clone.grid;
+    }
 
     Grid::Grid(Grid && moved) noexcept {
         width = moved.width;
@@ -92,7 +96,7 @@ namespace mg{
                  if (x >= 0 and x < width and y >= 0 and y < height)
                     v = get(x, y);
                  else
-                    v = std::shared_ptr<Wall>();
+                    v = WorldObj::make<Wall>();
 
                  _grid.set(i, j, v);
              }

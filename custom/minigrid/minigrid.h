@@ -13,7 +13,7 @@ using mg::WorldObj;
 
 namespace gym {
 
-class MiniGridEnv : public Env< cv::Mat, int>{
+class MiniGridEnv : public Env< std::unordered_map<std::string, cv::Mat>, int>{
 
     public:
 
@@ -65,8 +65,14 @@ class MiniGridEnv : public Env< cv::Mat, int>{
         StepT step(const ActionT &action) noexcept override;
 
         void render(RenderType) override;
-
+        cv::Mat render(bool highlight=true, int tile_size=mg::TILE_PIXELS);
         void setAgentSize(int agent_sz) { agentViewSize = agent_sz; }
+        inline auto wordCount() { return missionWordDictionary.size(); }
+        inline auto getWidth() { return width; }
+        inline auto getHeight() { return height; }
+        inline void setTileSize(int ts) { tile_size = ts; }
+        inline auto tileSize() const { return tile_size; }
+        cv::Mat getObsRender(cv::Mat const& obs, int tile_size= mg::TILE_PIXELS / 2);
 
 protected:
         mg::Grid grid;
@@ -75,6 +81,8 @@ protected:
         static inline  std::unordered_map<std::string, int> missionWordDictionary{};
         std::optional<int> agent_dir{};
         std::optional<mg::Point> agent_pos{};
+        std::optional<std::vector<int>> missionCache;
+        int tile_size=mg::TILE_PIXELS;
 
         virtual void genGrid( int width, int height) = 0;
 
@@ -140,8 +148,6 @@ private:
         bool agentSees( mg::Point point);
 
         std::pair<mg::Grid, mg::Mask2D> genObsGrid();
-
-        cv::Mat getObsRender(cv::Mat const& obs, int tile_size= mg::TILE_PIXELS / 2);
 
         std::vector<int> tokenizeMission();
     };

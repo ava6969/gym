@@ -20,6 +20,10 @@ namespace gym{
         explicit DoorKeyEnv5x5(): DoorKeyEnv(5){}
     };
 
+    struct DoorKeyEnv6x6 : DoorKeyEnv{
+        explicit DoorKeyEnv6x6(): DoorKeyEnv(6){}
+    };
+
     struct DoorKeyEnv8x8 : DoorKeyEnv{
         explicit DoorKeyEnv8x8(): DoorKeyEnv(8){}
     };

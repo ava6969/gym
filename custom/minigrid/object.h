@@ -99,7 +99,7 @@ namespace mg{
                 WorldObj(Object::Door, color), is_open(is_open), is_locked(is_locked) {}
 
         [[nodiscard]] inline bool canOverlap() const override { return is_open; }
-        inline bool seeBehind() const override { return is_locked; }
+        [[nodiscard]] inline bool seeBehind() const override { return is_open; }
         bool toggle(gym::MiniGridEnv & env, Point pos) override;
         [[nodiscard]] State encode() const override;
         void render(cv::Mat&) override;
@@ -119,8 +119,8 @@ namespace mg{
 
     struct Ball: WorldObj{
 
-        explicit Ball( Color color=Color::Blue): WorldObj(Object::Key, color){}
-        inline bool canPickup() const override { return true; }
+        explicit Ball( Color color=Color::Blue): WorldObj(Object::Ball, color){}
+        [[nodiscard]] inline bool canPickup() const override { return true; }
         void render(cv::Mat&) override;
     };
 
@@ -129,7 +129,7 @@ namespace mg{
         explicit Box( Color color, const WorldObj::Ptr & contains=nullptr):
                 WorldObj(Object::Box, color){ this->contains = contains; }
         [[nodiscard]] inline bool canPickup() const override { return true; }
-        [[nodiscard]] bool toggle(gym::MiniGridEnv & env, Point pos) ;
+        [[nodiscard]] bool toggle(gym::MiniGridEnv & env, Point pos) override ;
         void render(cv::Mat&) override;
 
     };

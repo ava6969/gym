@@ -46,6 +46,10 @@ namespace gym::space{
             return std::make_shared<ADict>(spaces);
         }
 
+        void update(std::string const& name, std::shared_ptr<Space> space){
+            m_NamedSpaces[name] = space;
+        }
+
     private:
         NamedSpaces m_NamedSpaces;
 

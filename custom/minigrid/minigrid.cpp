@@ -30,7 +30,10 @@ namespace gym {
 
         agentViewSize = opt.agent_view_size;
         m_ObservationSpace = makeBoxSpace<uint8_t>(0, 255, {opt.agent_view_size, opt.agent_view_size, 3});
-//        m_ObservationSpace = makeDictionarySpace({{"image", m_ObservationSpace}} );
+        m_ObservationSpace = makeDictionarySpace({{"image", m_ObservationSpace},
+                                                 {"direction", makeBoxSpace<uint8_t>(0, 3, {1})},
+                                                  {"mission", makeBoxSpace<int>(0, std::numeric_limits<int>::max(),
+                                                                                {1})}});
         reward_range = {0, 1};
 
         width = opt.width.value();
@@ -54,7 +57,7 @@ namespace gym {
 
         m_Carrying = nullptr;
         step_count = 0;
-        return genObs()["image"];
+        return genObs();
 
     }
 
@@ -308,7 +311,7 @@ namespace gym {
         return obs_cell and (obs_cell->getType() == world_cell->getType());
     }
 
-    StepResponse<cv::Mat> MiniGridEnv::step(const int &action) noexcept {
+    StepResponse< std::unordered_map< std::string, cv::Mat> > MiniGridEnv::step(const int &action) noexcept {
         step_count++;
 
         auto reward = 0.f;
@@ -366,14 +369,14 @@ namespace gym {
         if( step_count >= max_steps)
             done = true;
 
-        return { genObs()["image"], reward, done };
+        return { genObs(), reward, done };
     }
 
     std::pair<mg::Grid, mg::Mask2D> MiniGridEnv::genObsGrid() {
         auto [top, _] = getViewExts();
         auto [topX, topY] = top;
 
-        auto _grid = grid.slice( {topX, topY, agentViewSize, agentViewSize} );
+        auto && _grid = grid.slice( {topX, topY, agentViewSize, agentViewSize} );
 
         for(int i = 0; i < (*agent_dir)+1; i++)
             _grid = _grid.rotate_left();
@@ -390,12 +393,11 @@ namespace gym {
         else
             _grid.set(_agent_pos, nullptr);
 
-        return {_grid, visMask};
+        return { std::move(_grid), visMask};
     }
 
     unordered_map<string, cv::Mat> MiniGridEnv::genObs() {
         auto [_grid, vis_mask] = genObsGrid();
-
         auto image = _grid.encode(vis_mask);
         if(not mission)
             throw std::runtime_error("environments must define a textual mission string");
@@ -408,6 +410,9 @@ namespace gym {
     }
 
     std::vector<int> MiniGridEnv::tokenizeMission() {
+
+        if(missionCache)
+            return *missionCache;
         std::vector<std::string> mission_split;
         if(mission)
             boost::split(mission_split, *mission, boost::is_any_of(" "));
@@ -418,46 +423,53 @@ namespace gym {
         std::ranges::transform(mission_split, result.begin(), [this](auto const& word){
            return this->missionWordDictionary[word];
         });
-        return result;
+        missionCache = result;
+        return *missionCache;
     }
 
-    cv::Mat MiniGridEnv::getObsRender(const cv::Mat &obs, int tile_size) {
+    cv::Mat MiniGridEnv::getObsRender(const cv::Mat &obs, int _tile_size) {
         auto[_grid, vis_mask] = mg::Grid::decode(obs);
-        return  _grid.render(tile_size,
+        return  _grid.render(_tile_size,
                              { floor_div(agentViewSize, 2), agentViewSize-1}, 3, vis_mask);
     }
 
     void MiniGridEnv::render(RenderType) {
+        cv::imshow(*mission, render(true));
+    }
 
-        auto[_, vis_mask] = genObsGrid();
+    cv::Mat MiniGridEnv::render(bool highlight, int tile_size) {
 
-        mg::Point f_vec = dir_vec(),
-        r_vec = right_vec();
+        if (not highlight) {
+            return grid.render(tile_size, *agent_pos, *agent_dir, std::nullopt);
+        } else {
 
-        mg::Point top_left = *agent_pos + (f_vec*(agentViewSize-1)) - (r_vec*( floor_div(agentViewSize, 2) ));
+            auto [_, vis_mask] = genObsGrid();
 
-        mg::Mask2D highlight_mask(width, std::vector(height ,false));
+            mg::Point f_vec = dir_vec(),
+                    r_vec = right_vec();
 
-        for(int vis_j = 0; vis_j < agentViewSize; vis_j++){
-            for(int vis_i = 0; vis_i < agentViewSize; vis_i++){
-                if( not vis_mask[vis_i][vis_j] )
-                    continue;
+            mg::Point top_left = *agent_pos + (f_vec * (agentViewSize - 1)) - (r_vec * (floor_div(agentViewSize, 2)));
 
-                auto[abs_i, abs_j] = top_left -  (f_vec*vis_j) + (r_vec*vis_i);
+            mg::Mask2D highlight_mask(width, std::vector(height, false));
 
-                if( abs_i < 0 or abs_i >= width)
-                    continue;
-                if( abs_j < 0 or abs_j >= height)
-                    continue;
+            for (int vis_j = 0; vis_j < agentViewSize; vis_j++) {
+                for (int vis_i = 0; vis_i < agentViewSize; vis_i++) {
+                    if (not vis_mask[vis_i][vis_j])
+                        continue;
 
-                highlight_mask[abs_i][abs_j] = true;
+                    auto [abs_i, abs_j] = top_left - (f_vec * vis_j) + (r_vec * vis_i);
+
+                    if (abs_i < 0 or abs_i >= width)
+                        continue;
+                    if (abs_j < 0 or abs_j >= height)
+                        continue;
+
+                    highlight_mask[abs_i][abs_j] = true;
+                }
             }
+
+            return grid.render(tile_size, *agent_pos, *agent_dir, highlight_mask);
         }
-
-        auto img = grid.render(mg::TILE_PIXELS, *agent_pos, *agent_dir, highlight_mask);
-        cv::imshow(*mission, img);
-
-        std::cout << *this << "\n";
     }
 
 }

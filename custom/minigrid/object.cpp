@@ -32,21 +32,21 @@ namespace mg{
 
         switch (obj_type) {
             case Object::Wall:
-                return std::make_unique< Wall >(color);
+                return std::make_shared< Wall >(color);
             case Object::Floor:
-                return std::make_unique< Floor >(color);
+                return std::make_shared< Floor >(color);
             case Object::Door:
-                return std::make_unique< Door >(color, is_open, is_locked);
+                return std::make_shared< Door >(color, is_open, is_locked);
             case Object::Key:
-                return std::make_unique< Key >(color);
+                return std::make_shared< Key >(color);
             case Object::Ball:
-                return std::make_unique< Ball >(color);
+                return std::make_shared< Ball >(color);
             case Object::Box:
-                return std::make_unique< Box >(color);
+                return std::make_shared< Box >(color);
             case Object::Goal:
-                return std::make_unique< Goal >();
+                return std::make_shared< Goal >();
             case Object::Lava:
-                return std::make_unique< Lava >();
+                return std::make_shared< Lava >();
             default:
                 throw std::runtime_error("Un-decodable Object Type");
         }

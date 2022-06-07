@@ -14,11 +14,10 @@ set(Boost_USE_STATIC_LIBS   ON)
 set(CMAKE_CXX_STANDARD 20)
 set(BUILD_TEST ON)
 
-option(ADD_BOX2D OFF)
-option(ADD_ATARI OFF)
+option(ADD_BOX2D ON)
+#option(ADD_ATARI ON)
 option(ADD_PYTHON ON)
-option(ADD_PROCGEN OFF)
-
+#option(ADD_PROCGEN ON)
 
 include_directories(third_party ${OPENGL_INCLUDE_DIR} ${THIRD_PARTY}/viz_doom/include)
 
@@ -58,9 +57,9 @@ add_subdirectory(classic_control)
 add_subdirectory(wrappers)
 add_subdirectory(custom)
 
-if(${ADD_ATARI})
+#if(${ADD_ATARI})
 	add_subdirectory(atari)
-endif()
+#endif()
 
 if(${ADD_BOX2D})
 	add_subdirectory(box2d)

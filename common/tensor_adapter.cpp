@@ -126,4 +126,14 @@ namespace gym {
         return torch::tensor( x );
     }
 
+    template<>
+    torch::Tensor TensorAdapter::encode(std::vector<int> && x) {
+        return torch::tensor( x );
+    }
+
+    template<>
+    torch::Tensor TensorAdapter::encode(std::vector<float> && x) {
+        return torch::tensor( x );
+    }
+
 }

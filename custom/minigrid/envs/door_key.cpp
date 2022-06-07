@@ -36,6 +36,10 @@ gym::DoorKeyEnv::DoorKeyEnv(int size): MiniGridEnv(Option().gridSize(size).maxSt
         fillDictionary();
     });
 
+    auto dictSpace = m_ObservationSpace->as<ADict>();
+    dictSpace->update("mission", makeBoxSpace<int>(0, std::numeric_limits<int>::max(),
+                                                   {static_cast<long>(missionWordDictionary.size())}));
+
     DoorKeyEnv::reset();
 
 }

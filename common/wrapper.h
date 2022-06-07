@@ -227,5 +227,51 @@
             return observation( std::move(x) );
         }
     };
+
+    template<typename EnvT, typename OutputT>
+    class ObservationWrapper2 : public Env< OutputT, typename EnvT::ActionT>{
+
+    protected:
+        std::shared_ptr< EnvT > m_Env;
+    public:
+
+        ObservationWrapper2(const std::shared_ptr<Space>& obsSpace,
+                            std::shared_ptr< EnvT > env):m_Env( std::move(env)) {
+            this->m_ObservationSpace = obsSpace;
+            this->m_ActionSpace = this->m_Env->actionSpace();
+        }
+
+        virtual OutputT observation( typename EnvT::ObservationT && ) const noexcept = 0;
+
+        inline StepResponse<OutputT> step(const typename EnvT::ActionT &action) noexcept override {
+            return step( this->m_Env->step(action) );
+        }
+
+        inline OutputT reset() noexcept override {
+            return observation(this->m_Env->reset());
+        }
+
+        inline StepResponse<OutputT> step( typename EnvT::StepT && resp) noexcept {
+            return {observation(std::move(resp.observation)), resp.reward, resp.done, resp.info};
+        }
+
+        OutputT reset(typename EnvT::ObservationT && x) noexcept {
+            return observation( std::move(x) );
+        }
+
+        inline void render(RenderType type) override{
+            return m_Env->render(type);
+        }
+
+        inline std::string info() override {
+            return this->m_Env->info();
+        }
+
+        inline void seed(std::optional<uint64_t> const& seed) noexcept override {
+            m_Env->seed(seed);
+        }
+
+        inline EnvT* wrapped() { return m_Env.get(); }
+    };
 }
 #endif //GYMENV_WRAPPER_H

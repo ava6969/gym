@@ -87,7 +87,7 @@ void gym::MemoryEnv::genGrid(int width, int height) {
 
 }
 
-gym::StepResponse<cv::Mat> gym::MemoryEnv::step(const int &_action) noexcept {
+gym::StepResponse< std::unordered_map< std::string, cv::Mat> > gym::MemoryEnv::step(const int &_action) noexcept {
     auto action = _action;
     if( action == mg::toIndex(Actions::pickup ) )
         action = mg::toIndex(Actions::toggle );
