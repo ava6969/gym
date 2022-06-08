@@ -179,12 +179,13 @@ namespace gym {
     }
 
     void ProcgenEnv::render(RenderType) {
-        auto data =  std::get<0>( base.observe() ).clone();
 
-        cv::resize(data, data, {128, 128});
-        cv::cvtColor(data, data, cv::COLOR_RGB2BGR);
+        cv::Mat render_hires_buf = cv::Mat(RENDER_RES, RENDER_RES, CV_8UC4);
 
-        cv::imshow("ProcgenEnv", data);
-        cv::waitKey(10);
+        Game *game = base._game();
+        game->render_to_buf(render_hires_buf.data, RENDER_RES, RENDER_RES, true);
+
+        cv::imshow("ProcgenEnv", render_hires_buf);
+        cv::waitKey(100);
     }
 }

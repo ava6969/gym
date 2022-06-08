@@ -108,7 +108,18 @@ class Game {
     Game(std::string name);
     void step();
     void reset();
-    void render_to_buf(void *buf, int w, int h, bool antialias);
+    void render_to_buf(void *dst, int w, int h, bool antialias){
+        QImage img((uchar *)dst, w, h, w * 4, QImage::Format_RGB32);
+        QPainter p(&img);
+
+        if (antialias) {
+            p.setRenderHint(QPainter::Antialiasing, true);
+            p.setRenderHint(QPainter::SmoothPixmapTransform, true);
+        }
+
+        QRect rect = QRect(0, 0, w, h);
+        game_draw(p, rect);
+    }
     void parse_options(std::string name, VecOptions opt_vec);
 
     virtual ~Game() = 0;

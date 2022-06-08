@@ -105,6 +105,8 @@ namespace gym {
 
         cv::Mat reset();
 
+        auto* _game() { return game.get(); }
+
         ~BaseProcgenEnv();
 
     private:
