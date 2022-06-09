@@ -26,7 +26,7 @@ TEST_CASE("Testing Rendering Procgen") {
         auto s = env.reset();
         float rew;
         while (true) {
-            env.render(gym::RenderType::HUMAN);
+            env.render();
             auto resp = env.step( torch::randint(15, {1}).item<int>() );
             rew += resp.reward;
             if(resp.done)

@@ -66,8 +66,8 @@
         }
 
         template<size_t RenderIdx>
-        void render(RenderType x)  {
-            std::get<RenderIdx>(wrappers).render(x);
+        void render()  {
+            std::get<RenderIdx>(wrappers)._render();
         }
 
         inline ObservationT reset() noexcept override{
@@ -107,8 +107,8 @@
         Wrapper<EnvT>& operator=(Wrapper<EnvT>&& x) noexcept= default;
         Wrapper<EnvT>& operator=(Wrapper<EnvT> const& x) noexcept= default;
 
-        inline void render(RenderType type) override{
-            return m_Env->render(type);
+        inline void render() override{
+            return m_Env->render();
         }
 
         inline std::string info() override {
@@ -259,8 +259,8 @@
             return observation( std::move(x) );
         }
 
-        inline void render(RenderType type) override{
-            return m_Env->render(type);
+        inline void render() override{
+            m_Env->render();
         }
 
         inline std::string info() override {

@@ -15,7 +15,7 @@ void runView(){
         std::cout << x << "\n";
         bool done = false;
         while (not done){
-            env.render(gym::RenderType::HUMAN);
+            env.render();
             auto key = cv::waitKey(0) - 48;
             if(key < 7 and key > 0){
                 auto response = env.step(key-1);
@@ -39,7 +39,7 @@ void runImageWrapper(){
         while (not done){
             cv::imshow("minigrid_view", x);
             cv::waitKey(1);
-            env.render(gym::RenderType::HUMAN);
+            env.render();
             auto key = cv::waitKey(0) - 48;
             if(key < 7 and key > 0){
                 auto response = env.step(key-1);

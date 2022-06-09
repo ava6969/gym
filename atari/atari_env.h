@@ -41,7 +41,7 @@ namespace gym {
 
         StepResponse< ObsT<image> > step(int const &action) noexcept override;
 
-        void render(RenderType type) override;
+        void render() override;
 
         std::vector<std::string> getActionMeaning();
 

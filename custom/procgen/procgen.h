@@ -142,6 +142,6 @@ class ProcgenEnv : public Env<cv::Mat, int>{
 
         StepT step(const ActionT &action) noexcept override;
 
-        void render(RenderType) override;
+        void render() override;
     };
 }

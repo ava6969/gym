@@ -122,7 +122,7 @@ namespace gym{
             return complete();
         }
         void render() const override{
-            this->envs[0]->render(RenderType::HUMAN);
+            this->envs[0]->render();
         }
 
         virtual typename VecEnv<dict>::ObservationT reset(int index){

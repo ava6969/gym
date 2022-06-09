@@ -57,7 +57,7 @@ namespace gym {
 
         ObservationT reset()  noexcept final;
 
-        void render(RenderType type) final;
+        void render() final;
 
     };
 }

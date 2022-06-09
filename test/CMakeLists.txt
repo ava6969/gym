@@ -1,8 +1,4 @@
-add_executable(dm_lab_run_test  dm_lab.cpp )
-target_link_libraries(dm_lab_run_test PRIVATE ${DEPENDENCIES} gym)
-target_include_directories(dm_lab_run_test PRIVATE ..)
-
-add_executable(GymTest  box_world.cpp py_atari_env.cpp procgen.cpp)
+add_executable(GymTest  box_world.cpp py_atari_env.cpp procgen.cpp dm_lab.cpp)
 target_link_libraries(GymTest PRIVATE ${DEPENDENCIES} gym)
 target_include_directories(GymTest PRIVATE ..)
 

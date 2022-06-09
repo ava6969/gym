@@ -267,7 +267,7 @@ class AtariEnv(gym.Env, utils.EzPickle):
         else:
             return obs
 
-    def render(self, mode: str) -> Any:
+    def _render(self, mode: str) -> Any:
         """
         Render is not supported by ALE. We use a paradigm similar to
         Gym3 which allows you to specify `render_mode` during construction.
@@ -282,7 +282,7 @@ class AtariEnv(gym.Env, utils.EzPickle):
         elif mode == "human":
             raise error.Error(
                 (
-                    "render(mode='human') is deprecated. Please supply `render_mode` when "
+                    "_render(mode='human') is deprecated. Please supply `render_mode` when "
                     "constructing your environment, e.g., gym.make(ID, render_mode='human'). "
                     "The new `render_mode` keyword argument supports DPI scaling, "
                     "audio, and native framerates."
@@ -290,7 +290,7 @@ class AtariEnv(gym.Env, utils.EzPickle):
             )
         else:
             raise error.Error(
-                f"Invalid render mode `{mode}`. Supported modes: `rgb_array`."
+                f"Invalid _render mode `{mode}`. Supported modes: `rgb_array`."
             )
 
     def close(self) -> None:

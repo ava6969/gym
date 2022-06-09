@@ -31,11 +31,6 @@ namespace gym{
         AnyMap info{};
     };
 
-    enum class RenderType{
-        HUMAN,
-        IMG_RGB
-    };
-
     template<typename ObservationType,
             typename ActionType,
             typename StepType=StepResponse<ObservationType> >
@@ -58,7 +53,7 @@ namespace gym{
 
         virtual ObservationT reset() noexcept = 0;
 
-        virtual void render(RenderType ) {}
+        virtual void render() {}
 
         virtual std::string info() { return "Gym Env"; }
 

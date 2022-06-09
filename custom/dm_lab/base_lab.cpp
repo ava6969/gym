@@ -12,43 +12,53 @@ namespace gym{
         envClose();
     }
 
-    int LabObject::envClose() {
+    bool LabObject::envClose() {
         if(m_Status != ENV_STATUS_CLOSED){
             DMLoader::instance()->close_handle(m_Api, m_Context);
             m_Status = ENV_STATUS_CLOSED;
-            return 1;
+            return true;
         }
-        return 0;
+        if(levelFetch){
+            delete levelFetch;
+            levelFetch = nullptr;
+        }
+        return false;
     }
-
-
 
     LabObject::LabObject(const std::string &level_name,
                          const std::vector<std::string> &observations,
-                         const std::map<std::string, std::string>& config, const std::string& renderer,
-                         void* levelCache,
+                         const std::map<std::string, std::string>& config,
+                         const std::string& renderer,
+                         LevelFetch* levelCache,
                          const std::filesystem::path &tempFolder):
                          m_ObservationCount(observations.size()),
-                         m_ObservationIndices(m_ObservationCount){
+                         m_ObservationIndices(m_ObservationCount),
+                         m_Status(ENV_STATUS_CLOSED){
 
         auto param = makeParam(renderer, levelCache, tempFolder);
 
         init(level_name, config, param);
 
         createObservationSpace();
+        levelFetch = levelCache;
     }
 
     void LabObject::init(std::string const& levelName,
                          const std::map<std::string, std::string>& config,
                          const DeepMindLabLaunchParams& params) {
 
-        auto log = [&](const std::string &log_message) {
-            return log_message + "\"" + m_Api.error_message(m_Context) + "\"";
-        };
-
         if (DMLoader::instance()->connect(params, m_Api, &m_Context) != 0) {
             throw std::runtime_error("Failed to connect to RL API");
         }
+
+#ifndef __has_feature
+#  define __has_feature(x) 0
+#endif
+#if __has_feature(thread_sanitizer)
+        if (m_Api.setting(m_Context, "vmMode", "interpreted") != 0) {
+            throw std::runtime_error( "Failed to apply 'vmMode' setting - \"%s\"");
+        }
+#endif
 
         m_Status = ENV_STATUS_UNINITIALIZED;
         m_Episode = 0;
@@ -77,12 +87,11 @@ namespace gym{
     }
 
     DeepMindLabLaunchParams LabObject::makeParam(const std::string& renderer,
-                                                 void* levelCache,
+                                                 LevelFetch* levelCache,
                                                  std::filesystem::path const& tempFolder) {
         DeepMindLabLaunchParams params = {};
-        params.runFilesPath= getenv("DM_RUNFILES_PATH");
-        if(params.runFilesPath.empty())
-            params.runFilesPath = std::filesystem::current_path() / "deepmind_lab.so.runfiles" / "org_deepmind_lab";
+        auto home = std::filesystem::path( std::getenv("HOME") );
+        params.runFilesPath = home / "sam" / "gym" / "custom" / "dm_lab" /  "lab" / "org_deepmind_lab";
 
         if (renderer == "hardware") {
             params.renderer = DeepMindLabRenderer::DeepMindLabRenderer_Hardware;
@@ -93,16 +102,30 @@ namespace gym{
 
         if(levelCache){
             params.levelCacheParams.context = levelCache;
-            params.levelCacheParams.fetch_level_from_cache = [](void *, const char *const *, int,
-                                                                const char *, const char *) -> bool {
-                return false;
+
+            params.levelCacheParams.fetch_level_from_cache = [](
+                    void * level_cache_context,
+                    const char *const cache_paths[],
+                    int num_cache_paths,
+                    const char * key,
+                    const char * pk3_path) -> bool {
+
+                if(level_cache_context){
+                    return reinterpret_cast<LevelFetch*>(level_cache_context)->fetch(key, pk3_path);
+                }else{
+                    throw std::runtime_error("LevelCache* has been deallocated before call in dmlab engine");
+                }
             };
 
-            params.levelCacheParams.write_level_to_cache = [](void *, const char *const *, int,
-                                                              const char *, const char *)  -> void {
-
+            params.levelCacheParams.write_level_to_cache = [](void * level_cache_context, const char *const *, int,
+                                                              const char * key , const char * pk3_path)  -> void {
+                if(level_cache_context){
+                    reinterpret_cast<LevelFetch*>(level_cache_context)->fetch(key, pk3_path);
+                }else{
+                    throw std::runtime_error("LevelCache* has been deallocated before call in dmlab engine");
+                }
             };
-            m_LevelCache = levelCache;
+
         }
 
         params.optionalTempFolder = tempFolder;
@@ -151,12 +174,12 @@ namespace gym{
         }
 
         if (m_Api.start(m_Context, m_Episode, seed) != 0) {
-            throw std::runtime_error( m_Log("Environment Error") );
+            throw std::runtime_error( log("Environment Error") );
         }
 
         m_NumSteps = 0;
         ++m_Episode;
-        m_Status = EnvCApi_EnvironmentStatus_Running;
+        m_Status = ENV_STATUS_INITIALIZED;
         return true;
     }
 
@@ -179,7 +202,7 @@ namespace gym{
         m_NumSteps += numSteps;
 
         if (m_Status == EnvCApi_EnvironmentStatus_Error) {
-            auto msg = m_Log("Failed to advance Environment");
+            auto msg = log("Failed to advance Environment");
             DMLoader::instance()->close_handle(m_Api, m_Context);
             throw std::runtime_error(msg);
         }
@@ -187,94 +210,61 @@ namespace gym{
         return reward;
     }
 
-    std::vector<std::tuple<std::string,
-            std::vector<int>,
-            EnvCApi_ObservationType_enum>> LabObject::observationSpec() {
+    std::vector<ObservationSpec> LabObject::observationSpec() {
 
-        std::vector<std::tuple<std::string, std::vector<int>, EnvCApi_ObservationType_enum>> result{};
         EnvCApi_ObservationSpec_s spec{};
-        int j = 0;
+        auto count = m_Api.observation_count(m_Context);
+        std::vector<ObservationSpec> result(count);
 
-        for(auto idx : m_ObservationIndices){
-            m_Api.observation_spec(m_Context, idx, &spec);
-            result.push_back({m_Api.observation_name(m_Context, idx),
-                              {},
-                              spec.type});
-            if (spec.type != EnvCApi_ObservationString) {
-                std::vector<int> dims(spec.dims);
-                memcpy(dims.data(), spec.shape, sizeof(int) * spec.dims);
-                std::get<1>(result[j]) = dims;
-            }
-            j++;
+        for(int i = 0; i < count; i++){
+            m_Api.observation_spec(m_Context, i, &spec);
+            auto shape = spec.type != EnvCApi_ObservationString ? std::vector<int>{} : makeShape(spec);
+            result[i] = { m_Api.observation_name(m_Context, i), shape, spec.type};
         }
-//
-//        auto m_Count = m_Api.observation_count(m_Context);
-//        std::vector<std::tuple<std::string, std::vector<int>, EnvCApi_ObservationType_enum>> result(m_Count);
-//        EnvCApi_ObservationSpec_s spec{};
-
-//        for(int i=0; i < m_Count; i++) {
-//            m_Api.observation_spec(m_Context, i, &spec);
-//
-//            result[i] = {m_Api.observation_name(m_Context, i),
-//                         {},
-//                         spec.type};
-//
-//            if (spec.type != EnvCApi_ObservationString) {
-//                std::vector<int> dims(spec.dims);
-//                memcpy(dims.data(), spec.shape, sizeof(int) * spec.dims);
-//                std::get<1>(result[i]) = dims;
-//            }
-//        }
         return result;
     }
 
-    std::vector<std::tuple<std::string, int, int>> LabObject::actionSpec() {
+    std::vector<ActionSpec> LabObject::actionSpec() {
         auto count = m_Api.action_discrete_count(m_Context);
-         std::vector<std::tuple<std::string, int, int>> result(count);
+         std::vector<ActionSpec> result(count);
 
         int min_discrete, max_discrete;
         for (int i = 0; i < count; ++i) {
-            m_Api.action_discrete_bounds(m_Context, i, &min_discrete,
-                                                    &max_discrete);
+            m_Api.action_discrete_bounds(m_Context, i, &min_discrete, &max_discrete);
             result[i] = {m_Api.action_discrete_name(m_Context, i), min_discrete, max_discrete};
         }
 
         return result;
     }
 
-    DMObservation LabObject::makeObservation(const EnvCApi_Observation &observation) {
+    cv::Mat LabObject::makeObservation(const EnvCApi_Observation &observation) {
         auto spec = observation.spec;
         switch (observation.spec.type) {
 
             case EnvCApi_ObservationString:
-                return observation.payload.string;
+                return cv::Mat1b(1, int(spec.shape[0]), reinterpret_cast<uchar*>(
+                        const_cast<char*>(observation.payload.string )));
             case EnvCApi_ObservationDoubles:
             {
                 std::vector<double> array(spec.dims);
                 memcpy(array.data(), observation.payload.doubles, spec.dims * sizeof(double ));
-                return array;
+                return cv::Mat1d(1, spec.dims, const_cast<double*>(observation.payload.doubles));
             }
             default:{
 
                 auto[row, col, channel] = std::make_tuple(spec.shape[0], spec.shape[1], spec.shape[2]);
                 auto data = const_cast<uchar*>(observation.payload.bytes);
-
-                cv::Mat m_Mat = cv::Mat(row, col, CV_8UC(channel), cv::Scalar::all(0));
-
-                memcpy(m_Mat.data, data, spec.shape[0] * spec.shape[1] * spec.shape[2] * sizeof(uint8_t));
-
-                return m_Mat;
+                return {row, col, CV_8UC(channel), data};
             }
         }
     }
 
-    std::unordered_map<std::string, DMObservation>  LabObject::observations() {
+    DMObservation LabObject::observations() {
         if(not isRunning()){
             throw std::runtime_error( "Environment in wrong status for call to observations()");
         }
 
-        std::unordered_map<std::string, DMObservation> result;
-
+        DMObservation result;
         EnvCApi_Observation observation;
 
         for (int i = 0; i < m_ObservationCount; ++i) {

@@ -87,7 +87,7 @@ namespace gym{
         return {m_State, reward, done, {}};
     }
 
-    void CartPoleEnv::render(RenderType ) {
+    void CartPoleEnv::render() {
 
         [[maybe_unused]] uint const SCREEN_WIDTH{600};
         [[maybe_unused]] uint const SCREEN_HEIGHT{400};

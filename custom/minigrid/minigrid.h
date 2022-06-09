@@ -64,8 +64,8 @@ class MiniGridEnv : public Env< std::unordered_map<std::string, cv::Mat>, int>{
 
         StepT step(const ActionT &action) noexcept override;
 
-        void render(RenderType) override;
-        cv::Mat render(bool highlight=true, int tile_size=mg::TILE_PIXELS);
+        void render() override;
+        cv::Mat _render(bool highlight=true, int tile_size=mg::TILE_PIXELS);
         void setAgentSize(int agent_sz) { agentViewSize = agent_sz; }
         inline auto wordCount() { return missionWordDictionary.size(); }
         inline auto getWidth() { return width; }

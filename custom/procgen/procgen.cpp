@@ -178,7 +178,7 @@ namespace gym {
         return {data, reward, first, {}};
     }
 
-    void ProcgenEnv::render(RenderType) {
+    void ProcgenEnv::render() {
 
         cv::Mat render_hires_buf = cv::Mat(RENDER_RES, RENDER_RES, CV_8UC4);
 

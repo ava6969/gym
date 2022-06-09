@@ -50,7 +50,7 @@ namespace gym {
             return lastObs;
         }
 
-        void render(RenderType type) override{
+        void render() override{
             cv::imshow("Atari PreProc", lastObs);
             cv::waitKey(1);
         }

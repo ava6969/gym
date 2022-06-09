@@ -19,15 +19,37 @@
 #define ENV_STATUS_UNINITIALIZED -2
 #define ENV_STATUS_INITIALIZED -1
 
+using LabModuleState = char[4096];
+
+static void get_module_state(LabModuleState& );
+
 namespace cv{
     class Mat;
 }
 
 namespace gym{
 
-    using DMObservation = std::variant<std::string,
-            cv::Mat,
-            std::vector<double>>;
+
+    struct LevelFetch{
+        virtual bool fetch(std::string const& key, std::string const& path) = 0;
+        virtual void write(std::string const& key, std::string const& path) = 0;
+        virtual ~LevelFetch()=default;
+    };
+
+    template<class T>
+    struct Spec{
+        std::string name{};
+        T shape{};
+        EnvCApi_ObservationType_enum type{};
+    };
+
+    using ObservationSpec = Spec<std::vector<int>>;
+    struct ActionSpec{
+        std::string name{};
+        int min, max;
+    };
+
+    using DMObservation = std::unordered_map<std::string, cv::Mat>;
 
     class LabObject {
 
@@ -37,50 +59,53 @@ namespace gym{
                   std::vector<std::string> const &observation_name,
                   const std::map<std::string, std::string>& config,
                   const std::string& renderer,
-                  void* levelCache={},
+                  LevelFetch* levelCache=nullptr,
                   std::filesystem::path const& tempFolder={});
 
         bool reset(int _episode = -1, std::optional<int> const& _seed = std::nullopt);
 
         [[nodiscard]] inline
         bool isRunning() const {
-            return m_Status == ENV_STATUS_INITIALIZED || m_Status == EnvCApi_EnvironmentStatus_Running;
+            return (m_Status == ENV_STATUS_INITIALIZED) ||
+                    (m_Status == EnvCApi_EnvironmentStatus_Running);
         }
 
-        std::vector<std::tuple<std::string,
-        std::vector<int>,
-        EnvCApi_ObservationType_enum>> observationSpec();
+        std::vector<ObservationSpec> observationSpec();
 
-        std::vector<std::tuple<std::string, int, int>> actionSpec();
+        inline static auto makeShape(EnvCApi_ObservationSpec_s const &spec){
+            std::vector<int> dims(spec.dims);
+            memcpy(dims.data(), spec.shape, sizeof(int) * spec.dims);
+            return dims;
+        }
 
-        std::variant<std::string,
-        cv::Mat,
-        std::vector<double>> makeObservation(const EnvCApi_Observation& observation);
+        std::vector<ActionSpec>  actionSpec();
 
-        std::unordered_map<std::string, DMObservation> observations();
+        static cv::Mat  makeObservation(const EnvCApi_Observation& observation);
+
+        DMObservation observations();
 
         double step(std::vector<int> const& action, int numSteps=1);
 
-        int envClose();
+        bool envClose();
 
         ~LabObject();
 
     private:
         EnvCApi m_Api{};
         void* m_Context{};
-        void* m_LevelCache{};
         int m_Status{};
         int m_Episode{};
-        int m_ObservationCount{};
+        uint32_t m_ObservationCount{};
         std::vector<int> m_ObservationIndices{};
         int m_NumSteps{};
+        LevelFetch* levelFetch;
 
-        std::function<std::string(const std::string &)> m_Log = [&](const std::string &log_message) {
+        std::function<std::string(const std::string &)> log = [this](const std::string &log_message) {
             return log_message + "\"" + m_Api.error_message(m_Context) + "\"";
         };
 
         DeepMindLabLaunchParams makeParam(const std::string& renderer,
-                                          void* levelCache,
+                                          LevelFetch* levelCache,
                                           std::filesystem::path const& tempFolder);
 
         void init(std::string const& levelName,

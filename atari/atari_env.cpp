@@ -113,7 +113,7 @@ namespace gym{
     }
 
     template<bool image>
-    void AtariEnv<image>::render(RenderType) {
+    void AtariEnv<image>::render() {
 
         if constexpr(image){
             auto scr = m_Ale->getScreen();

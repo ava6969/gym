@@ -14,7 +14,7 @@ TEST_CASE("Testing Rendering") {
     while (true) {
         auto resp = env.step( torch::randint(4, {1}).item<int>() );
 
-        env.render(gym::RenderType::HUMAN);
+        env.render();
 
         if(resp.done)
             break;
@@ -27,7 +27,7 @@ TEST_CASE("Testing Rendering Control") {
 
     auto s = env.reset();
     while (true) {
-        env.render(gym::RenderType::HUMAN);
+        env.render();
 
         char key{};
         std::cin >> key;
@@ -66,7 +66,7 @@ TEST_CASE("Testing Rendering Random") {
         cv::resize(mat, mat, {128, 128}, cv::INTER_CUBIC);
         cv::imshow("raw", mat);
 
-        env.render(gym::RenderType::HUMAN);
+        env.render();
         cv::waitKey(100);
 
         auto resp = env.step( torch::randint(4, {1}).item<int>() );

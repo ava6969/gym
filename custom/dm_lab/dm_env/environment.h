@@ -21,7 +21,7 @@ namespace gym {
         StepType stepType{StepType::FIRST};
         std::optional<float> reward{};
         std::optional<float> discount{};
-        ObservationType observation{};
+        std::unordered_map<std::string, cv::Mat> observation{};
     };
 
     static inline bool first(StepType type) { return type == StepType::FIRST; }

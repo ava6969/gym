@@ -41,7 +41,7 @@ namespace gym{
         return {m_CarPos, m_CarVel};
     }
 
-    void gym::MountainCarEnv::render(gym::RenderType) {
+    void gym::MountainCarEnv::render() {
         // If a viewer does not exist, create it
         if (!m_Viewer) {
             m_Viewer = std::make_unique<Viewer>(400, 400, "MountainCar");

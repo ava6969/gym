@@ -292,7 +292,7 @@ namespace gym {
         return {world, {agent_pos[0].item().toInt(), agent_pos[1].item().toInt()}, dead_ends, goal_colors_rgb};
     }
 
-    void gym::BoxWorld::render(RenderType) {
+    void gym::BoxWorld::render() {
         // If a viewer does not exist, create it
         if (!m_Viewer) {
             m_Viewer = std::make_unique<Viewer>((n + 2) * SCALE, (n + 2) * SCALE, "BoxWorld");

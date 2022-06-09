@@ -12,7 +12,7 @@ int main() {
         auto ret = 0.0f;
 
         while (true) {
-            env.render(gym::RenderType::HUMAN);
+            env.render();
 
             char key{};
             std::cin.get(key);

@@ -68,8 +68,8 @@ namespace gym{
                 env_module.attr("seed")(seed.value());
         }
 
-        inline void render(RenderType ) override{
-            env_module.attr("render")();
+        inline void render( ) override{
+            env_module.attr("_render")();
         }
 
         ~PythonEnv() override {

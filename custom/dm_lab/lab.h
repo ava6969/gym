@@ -11,20 +11,19 @@
 #include "base_lab.h"
 
 namespace gym {
-    using DMObservationMap = std::unordered_map<std::string, DMObservation>;
 
-    class Lab : public Environment<DMObservationMap, int>{
+    class Lab : public Environment<DMObservation, int>{
 
     public:
         Lab(std::string const &level_name,
             std::vector<std::string> observation_names,
             const std::map<std::string, std::string>& config,
             std::string const& renderer,
-            DeepMindLabLevelCacheParams_s level_cache_param = {});
+            LevelFetch* level_cache= nullptr);
 
-        TimeStep<DMObservationMap> reset() override;
+        TimeStep<DMObservation> reset() override;
 
-        TimeStep<DMObservationMap> step(const std::map<std::string, int> &action) override ;
+        TimeStep<DMObservation> step(const std::map<std::string, int> &action) override ;
 
         inline
         std::unordered_map<std::string, BoundedArray<int>> actionSpec() const { return m_ActionSpec; }
@@ -43,6 +42,6 @@ namespace gym {
         std::unordered_map<std::string, Array> m_ObservationSpec;
         std::vector<int> m_labAction;
 
-        std::unordered_map<std::string, DMObservation> observation();
+        DMObservation observation();
     };
 }

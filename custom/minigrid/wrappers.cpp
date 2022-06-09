@@ -48,7 +48,7 @@ namespace gym{
 
     unordered_map<std::string, cv::Mat>
             RGBImgObsWrapper::observation(unordered_map<std::string, cv::Mat> && x) const noexcept {
-        x.insert_or_assign("image", m_Env->render(false, tile_size));
+        x.insert_or_assign("image", m_Env->_render(false, tile_size));
         return x;
     }
 

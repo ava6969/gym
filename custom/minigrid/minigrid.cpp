@@ -433,11 +433,11 @@ namespace gym {
                              { floor_div(agentViewSize, 2), agentViewSize-1}, 3, vis_mask);
     }
 
-    void MiniGridEnv::render(RenderType) {
-        cv::imshow(*mission, render(true));
+    void MiniGridEnv::render() {
+        cv::imshow(*mission, _render(true));
     }
 
-    cv::Mat MiniGridEnv::render(bool highlight, int tile_size) {
+    cv::Mat MiniGridEnv::_render(bool highlight, int tile_size) {
 
         if (not highlight) {
             return grid.render(tile_size, *agent_pos, *agent_dir, std::nullopt);

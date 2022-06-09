@@ -155,7 +155,7 @@ namespace gym {
 
         torch::Tensor reset() noexcept final;
 
-        void render(RenderType type) final;
+        void render() final;
     };
 }
 

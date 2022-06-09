@@ -28,7 +28,7 @@ TEST_CASE("Py Air Raid"){
         while(true){
 
             auto[obs, reward, done, info] = env->step(env->actionSpace()->sample<int>());
-            env->render(gym::RenderType::HUMAN);
+            env->render();
 
             t += reward;
 

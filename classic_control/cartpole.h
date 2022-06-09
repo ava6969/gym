@@ -15,7 +15,7 @@ namespace gym{
 
         explicit CartPoleEnv(Kwargs const&);
 
-        void render(RenderType type) final;
+        void render() final;
 
         std::vector<double> reset() noexcept final;
 
