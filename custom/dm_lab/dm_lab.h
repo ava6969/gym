@@ -12,6 +12,9 @@
 #include "spaces/dict.h"
 #include "action_mapping.h"
 #include <utility>
+#include "torch/torch.h"
+#include "common/wrapper.h"
+
 
 namespace gym {
 
@@ -83,6 +86,8 @@ namespace gym {
 
         explicit DMLabEnv(Option args);
 
+        int N(){ return int(m_ActionSet.size()); }
+
         ObservationT reset() noexcept final;
 
         StepResponse<ObservationT> step(ActionT const& action) noexcept final;
@@ -95,6 +100,29 @@ namespace gym {
         inline auto observation(){
             return m_Lab.observations()["RGB_INTERLEAVED"];
         }
+    };
+
+    struct DMLabEnv2 :  ObservationWrapper2< DMLabEnv, std::unordered_map<std::string, torch::Tensor>>{
+
+        explicit DMLabEnv2(std::shared_ptr<DMLabEnv> env);
+
+        std::unordered_map<std::string, torch::Tensor> observation( cv::Mat &&) const noexcept override;
+
+        inline StepResponse<std::unordered_map<std::string, torch::Tensor>>
+        step(const typename DMLabEnv::ActionT &action) noexcept override {
+            auto resp = ObservationWrapper2< DMLabEnv, std::unordered_map<std::string, torch::Tensor>>::step(
+                    this->m_Env->step(action) );
+            resp.reward = std::clamp<float>(resp.reward, -1, 1);
+            lastAction = resp.done ? 0 : action;
+            lastReward = resp.done ? 0 : resp.reward;
+            return resp;
+        }
+
+    private:
+        long lastAction;
+        int N;
+        float lastReward;
+
     };
 }
 

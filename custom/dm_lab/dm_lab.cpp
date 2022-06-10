@@ -6,6 +6,8 @@
 #include "games.h"
 #include "dm_lab.h"
 
+#include <utility>
+
 namespace gym{
 
     std::map<std::string, std::string> DMLabEnv::makeConfig( DMLabEnv::Option& args){
@@ -59,5 +61,25 @@ namespace gym{
 
     void DMLabEnv::render( ) {
 
+    }
+
+    DMLabEnv2::DMLabEnv2(std::shared_ptr<DMLabEnv> env) :
+            ObservationWrapper2< DMLabEnv, std::unordered_map<std::string, torch::Tensor>>(nullptr, std::move(env)){
+
+        NamedSpaces spaces;
+        spaces["image"] = m_Env->observationSpace()->clone();
+        spaces["reward"] = makeBoxSpace<float>(1);
+        spaces["action"] = makeBoxSpace<float>(m_Env->N());
+        N = m_Env->N();
+        lastAction = 0;
+        lastReward = 0;
+    }
+
+    std::unordered_map<std::string, torch::Tensor> DMLabEnv2::observation(cv::Mat && x) const noexcept {
+        auto[h,w] = std::tie(x.size[0], x.size[1]);
+        int c = 3;
+        return {{"image", torch::from_blob(x.data, {h*w*c}, c10::kByte).view({h, w, c}).permute({2, 0, 1}) / 255 },
+                {"reward", torch::tensor(lastReward)},
+                {"action", torch::one_hot( torch::tensor(lastAction),  N).to(c10::kFloat) }};
     }
 }

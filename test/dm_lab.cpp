@@ -10,6 +10,8 @@
 #include "opencv2/opencv.hpp"
 #include "catch.hpp"
 
+
+
 #define START_TIMER(title) auto t_start_xxx##title = std::chrono::high_resolution_clock().now();
 #define END_TIMER(title) std::cout << #title " took " << std::chrono::duration<double, std::milli>( \
 std::chrono::high_resolution_clock().now() - t_start_xxx##title).count() / 1000 \
@@ -58,7 +60,6 @@ TEST_CASE("DMLabSinglePlayer"){
 
     gym::DMLabEnv::Option opt;
     opt.is_test = true;
-    opt.renderer = "software";
 
    gym::DMLabEnv env1(opt);
 
@@ -85,50 +86,84 @@ TEST_CASE("DMLabSinglePlayer"){
     }
 }
 
-//int DMLabMultiPlayer(){
-//
-//    gym::ArgMap args;
-//    args = unordered_map<std::string, std::any>{};
-//
-//    args->insert_or_assign("is_test", true);
-//    vector<gym::DMLabEnv*> envs = {    new gym::DMLabEnv(args),
-//                                        new gym::DMLabEnv(args),
-//                                        new gym::DMLabEnv(args)};
-//
-//    for(int i = 0; i < 5; i++){
-//
-//        for(auto& env : envs){
-//            START_TIMER(reset)
-//            auto obs = env->reset();
-//            END_TIMER(reset)
-//        }
-//
-//        Counter c;
-//        while (true){
-//            int t =0 ;
-//            for(auto& env : envs) {
-//
-//                c.begin();
-//                auto resp = env->step( torch::tensor(env->actionSpace()->sample<int>()));
-//                c.end();
-//
-//                auto screen2 = env->_render();
-//                cv::imshow("demo" + std::to_string(t++), screen2.value());
-//                cv::waitKey(1);
-//
-//                if (resp.done) {
-//                    c.printMean("Step");
-//                    break;
-//                }
-//            }
-//        }
-//    }
-//
-//    for(auto* env : envs)
-//        delete env;
-//
-//    return 0;
-//}
+TEST_CASE("DMLabSinglePlayerWrapper"){
+
+    gym::DMLabEnv::Option opt;
+    opt.is_test = true;
+
+    gym::DMLabEnv2 env1( std::make_shared<gym::DMLabEnv>(opt));
+
+    for(int i = 0; i < 1; i++){
+        START_TIMER(reset)
+        auto obs = env1.reset();
+        END_TIMER(reset)
+
+        int j =  0;
+        Counter c;
+        while (j < 50){
+
+            c.begin();
+            auto resp = env1.step( env1.actionSpace()->sample<int>() );
+            c.end();
+
+            auto img = (resp.observation["image"] * 255).permute({1, 2, 0}).to(c10::kByte);
+            auto sz = img.sizes();
+            cv::Mat view(sz[0], sz[1], CV_8UC3, img.data_ptr<unsigned char>());
+            cv::imshow("demo", view );
+            std::cout << "pastR: " << resp.observation["reward"] << "\tpastA: "<< resp.observation["action"];
+            cv::waitKey(10);
+
+            if(resp.done)
+            {
+                c.printMean("Step");
+                break;
+            }
+            j++;
+        }
+    }
+}
+
+TEST_CASE("DMLabMultiPlayer"){
+
+    gym::DMLabEnv::Option opt;
+    opt.is_test = true;
+    vector<gym::DMLabEnv*> envs = {    new gym::DMLabEnv(opt),
+                                        new gym::DMLabEnv(opt),
+                                        new gym::DMLabEnv(opt)};
+
+    for(int i = 0; i < 5; i++){
+
+        for(auto& env : envs){
+            START_TIMER(reset)
+            auto obs = env->reset();
+            END_TIMER(reset)
+        }
+
+        Counter c;
+        while (true){
+            int t =0 ;
+            for(auto& env : envs) {
+
+                c.begin();
+                auto resp = env->step( env->actionSpace()->sample<int>());
+                c.end();
+
+                cv::imshow("demo" + std::to_string(t++), resp.observation);
+                cv::waitKey(1);
+
+                if (resp.done) {
+                    c.printMean("Step");
+                    break;
+                }
+            }
+        }
+    }
+
+    for(auto* env : envs)
+        delete env;
+
+
+}
 //
 //int main(){
 //    return DMLabSinglePlayer();
