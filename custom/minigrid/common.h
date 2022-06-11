@@ -114,6 +114,27 @@ namespace mg {
         return arr;
     }
 
+    template<class T>
+    static std::array<bool, 2> operator<(Point &arr, T const &d) {
+        return {arr.x < d, arr.y < d};
+    }
+
+    template<class T>
+    static std::array<bool, 2> operator>(Point &arr, T const &d) {
+        return {arr.x > d, arr.y > d};
+    }
+
+    template<class T>
+    static std::array<bool, 2> operator<=(Point &arr, T const &d) {
+        return {arr.x <= d, arr.y <= d};
+    }
+
+    template<class T>
+    static std::array<bool, 2> operator>=(Point &arr, T const &d) {
+        return {arr.x >= d, arr.y >= d};
+    }
+
+
     static Point operator+(Point const &arr, Point const &d) {
         auto res = arr;
         res += d;

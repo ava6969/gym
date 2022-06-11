@@ -22,40 +22,6 @@ TEST_CASE("Testing Rendering") {
     }
 }
 
-TEST_CASE("Testing Rendering Control") {
-    gym::BoxWorld env({});
-
-    auto s = env.reset();
-    while (true) {
-        env.render();
-
-        char key{};
-        std::cin >> key;
-        int action  = 0;
-
-        switch (key) {
-            case 'd': // Left
-                action = 2;
-                break;
-            case 'w': // Up
-                action = 0;
-                break;
-            case 'a': // Right
-                action = 3;
-                break;
-            case 's': // Down
-                action = 1;
-                break;
-        }
-
-        auto resp = env.step( action );
-
-        if(resp.done)
-            break;
-        s = resp.observation;
-    }
-}
-
 TEST_CASE("Testing Rendering Random") {
     gym::RandomBoxWorld env({});
 

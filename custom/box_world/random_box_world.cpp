@@ -24,7 +24,7 @@ namespace gym {
                         opt.verbose
             }){}
 
-    std::tuple<torch::Tensor, std::array<int, 2>, std::vector< BColor>, std::vector<BColor>>
+    std::tuple<cv::Mat, mg::Point, std::vector<BColor>, std::vector<BColor>>
     RandomBoxWorld::world_gen(){
         sample_config();
         return BoxWorld::world_gen();

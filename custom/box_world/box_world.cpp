@@ -3,6 +3,7 @@
 //
 #include "common/utils.h"
 #include <numeric>
+
 #include "box_world.h"
 
 namespace gym {
@@ -45,26 +46,22 @@ namespace gym {
         m_MaxSteps = opt.max_steps;
         // Generate observation and action spaces
 
-        m_ObservationSpace = makeBoxSpace<float>(0, 1, {3, n+2, n+2});
+        m_ObservationSpace = makeBoxSpace<uint8_t>(0, 255, {n+2, n+2, 3});
         m_ActionSpace = makeDiscreteSpace(4);
 
         // Generate the world
         m_OwnedKey = {0, 0, 0};
-        Env< torch::Tensor, int>::seed(std::nullopt);
-        BoxWorld::reset();
         m_NumEnvSteps = 0;
+        Env< cv::Mat, int>::seed(std::nullopt);
+        BoxWorld::reset();
 
-        // Create World State
-        m_World = torch::empty({3, n + 2, n + 2}, torch::kUInt8);
     }
 
-    gym::StepResponse<torch::Tensor> gym::BoxWorld::step(const int &action) noexcept {
-
-        auto world = m_World.permute({1, 2, 0});
+    gym::StepResponse<cv::Mat> gym::BoxWorld::step(const int &action) noexcept {
 
         int new_action = action;
         auto change = CHANGE_COORDINATES[new_action];
-        std::array<int, 2> new_position = {m_PlayerPosition[0] + change[0], m_PlayerPosition[1] + change[1]};
+        mg::Point newPosition = m_PlayerPosition + change;
         auto current_position = m_PlayerPosition;
 
         auto reward = m_StepCost;
@@ -73,20 +70,19 @@ namespace gym {
 
         bool possible_move = false;
         // Checks if this location is not on the board
-        if (new_position[0] < 1 || new_position[0] >= n + 1 || new_position[1] < 1 ||
-            new_position[1] >= n + 1)
+        if ( std::ranges::any_of( newPosition < 1 , [](bool x){ return x; }) || std::ranges::any_of(newPosition >= n + 1, [](bool x){ return x; }) )
             possible_move = false;
             // Checks if nothing is at this location
-        else if (is_empty(world[new_position[0]][new_position[1]]))
+        else if (is_empty( worldAt(newPosition) ) )
             possible_move = true;
             // Checks if the space is either a key or a lock
-        else if (new_position[1] == 1 || is_empty(world[new_position[0]][new_position[1] - 1])) {
+        else if (newPosition.y == 1 || is_empty( worldAt( { newPosition.x, newPosition.y - 1} ) ) ) {
             // If the space is a key
-            if (is_empty(world[new_position[0]][new_position[1] + 1])) {
+            if (is_empty( worldAt( { newPosition.x, newPosition.y + 1} ) ) ) {
                 possible_move = true;
-                world[0][0] = world[new_position[0]][new_position[1]];
-                m_OwnedKey = toColor(world[0][0]);
-                if (torch::equal(toTensor(m_OwnedKey), GOAL_COLOR)) {
+                m_OwnedKey = worldAtC(newPosition);
+                worldAt({0, 0}) = m_OwnedKey;
+                if ( m_OwnedKey == GOAL_COLOR ) {
                     reward += m_RewardGem;
                     done = true;
                 } else if (std::find(m_DeadEnds.begin(), m_DeadEnds.end(), m_OwnedKey) != m_DeadEnds.end()) {
@@ -94,68 +90,70 @@ namespace gym {
                     done = true;
                 } else if (std::find(m_CorrectKeys.begin(), m_CorrectKeys.end(), m_OwnedKey) != m_CorrectKeys.end())
                     reward += m_RewardCorrectKey;
-                else
+                else{
                     reward += m_RewardWrongKey;
+                    if(m_RewardWrongKey != 0)
+                        done = true;
+                }
+
             }
         }
                 // Otherwise, it is a lock
         else {
             // If the space matches an owned key, move into it
-            if ( torch::equal( world[new_position[0]][new_position[1]], toTensor(m_OwnedKey) ) )
+            if ( worldAtC(newPosition) == m_OwnedKey )
                 possible_move = true;
             else{
                 possible_move = false;
                 if(verbose){
-                    auto c = world[new_position[0]][new_position[1]];
+                    auto c = worldAtC(newPosition);
                     printf("lock color is [%i, %i, %i], but owned key is [%i , %i, %i]\n",
-                            c[0].item<int>(), c[1].item<int>(), c[2].item<int>(),
-                            m_OwnedKey[0], m_OwnedKey[1], m_OwnedKey[2]);
+                            c[0], c[1], c[2], m_OwnedKey[0], m_OwnedKey[1], m_OwnedKey[2]);
                 }
             }
 
         }
 
-
         // If it's possible to move, update the player position
         if (possible_move) {
-            m_PlayerPosition = new_position;
-            update_color(world, current_position, new_position);
+            m_PlayerPosition = newPosition;
+            update_color(m_World, current_position, newPosition);
         }
-
-        m_World = world.permute({2, 0, 1});
-        return {m_World / 255, reward, done, {}};;
+        state = m_World.clone();
+        return {state, reward, done, {}};;
     }
 
-    torch::Tensor gym::BoxWorld::reset() noexcept {
+    cv::Mat gym::BoxWorld::reset() noexcept {
         // Generate a new world
         std::tie(m_World, m_PlayerPosition, m_DeadEnds, m_CorrectKeys) = world_gen();
-        return m_World / 255;
+        state = m_World.clone();
+        return state;
     }
 
-    bool gym::BoxWorld::is_empty(torch::Tensor space) {
-        return torch::equal(space, BACKGROUND_COLOR) ||
-               torch::equal(space, AGENT_COLOR);
+    bool gym::BoxWorld::is_empty(cv::Vec3b const& space) {
+        return space == BACKGROUND_COLOR || space == AGENT_COLOR;
     }
 
-    void gym::BoxWorld::update_color(torch::Tensor& world, std::array<int, 2> const& previous_pos, std::array<int, 2>  const& new_pos) {
-        world[previous_pos[0]][previous_pos[1]] = BACKGROUND_COLOR;
-        world[new_pos[0]][new_pos[1]] = AGENT_COLOR;
+    void gym::BoxWorld::update_color(cv::Mat& world, mg::Point const& previous_pos, mg::Point const& new_pos) {
+        world.at<cv::Vec3b>(previous_pos.x, previous_pos.y) = BACKGROUND_COLOR;
+        world.at<cv::Vec3b>(new_pos.x, new_pos.y) = AGENT_COLOR;
     }
 
-    std::array<torch::Tensor, 4> gym::BoxWorld::sample_pair_locations(int num_pair) {
+    std::tuple< std::vector<mg::Point>, std::vector<mg::Point>, mg::Point, mg::Point>
+            gym::BoxWorld::sample_pair_locations(int num_pair) {
 
         auto _n = this->n;
         std::vector<int> _possibilities( (_n * (_n - 1)) - 1);
         std::iota(_possibilities.begin(), _possibilities.end(), 1);
         std::set<int> possibilities(_possibilities.begin(), _possibilities.end());
 
-        torch::Tensor keys = torch::empty({num_pair, 2}), locks = torch::empty({num_pair, 2});
+        std::vector<mg::Point> keys(num_pair), locks(num_pair);
 
         for (int k = 0; k < num_pair; k++) {
 
             auto key = sample<true>(1, possibilities, m_Device);
-            auto key_x = floor_div(key, _n - 1) , key_y = key % (_n - 1);
-            auto lock_x = key_x, lock_y = key_y + 1;
+            int key_x = floor_div(key, _n - 1) , key_y = key % (_n - 1);
+            int lock_x = key_x, lock_y = key_y + 1;
 
             possibilities.erase( key_x * (_n - 1) + key_y );
             for (int i = 1; i < std::min<int>(2, _n - 2 - key_y) + 1; i++) {
@@ -166,8 +164,8 @@ namespace gym {
                 possibilities.erase( key_x * (_n - 1) - i + key_y);
             }
 
-            keys[k] = torch::tensor({key_x, key_y});
-            locks[k] = torch::tensor({lock_x, lock_y});
+            keys[k] = {key_x, key_y};
+            locks[k] = {lock_x, lock_y};
         }
 
         auto agent_pos = sample<true>(1, possibilities, m_Device);
@@ -175,16 +173,16 @@ namespace gym {
         auto first_key = sample<true>(1, possibilities, m_Device);
 
         return {keys, locks,
-                torch::tensor({ floor_div(first_key, _n - 1), first_key % (_n - 1) }),
-                torch::tensor({ floor_div(agent_pos, _n - 1), agent_pos % (_n - 1) })};
+                { floor_div(first_key, _n - 1), first_key % (_n - 1) },
+                { floor_div(agent_pos, _n - 1), agent_pos % (_n - 1) }};
     }
 
-    std::tuple<torch::Tensor, std::array<int, 2>, std::vector<BColor>, std::vector<BColor>>
+    std::tuple<cv::Mat, mg::Point, std::vector<BColor>, std::vector<BColor>>
     gym::BoxWorld::world_gen() {
-        auto world = torch::ones({n, n, 3}, torch::kUInt8) * BACKGROUND_COLOR;
+        auto world = cv::Mat(n, n, CV_8UC3, BACKGROUND_COLOR);
 
         // Pick colors for intermediate goals and distractors
-        std::vector<int> color_indices(m_NumColors), goal_indices(m_GoalLength - 1);
+            std::vector<int> color_indices(m_NumColors), goal_indices(m_GoalLength - 1);
         std::iota(color_indices.begin(), color_indices.end(), 0);
         std::iota(goal_indices.begin(), goal_indices.end(), 0);
 
@@ -212,10 +210,10 @@ namespace gym {
 
         std::vector<BColor> dead_ends;
         if (m_GoalLength == 1)
-            world[first_key[0]][first_key[1]] = GOAL_COLOR;
+            world.at<BColor>(first_key.x, first_key.y) = GOAL_COLOR;
         else {
             for (int i = 1; i < m_GoalLength; i++) {
-                torch::Tensor color;
+                BColor color;
                 if (i == m_GoalLength - 1)
                     color = GOAL_COLOR;
                 else
@@ -226,23 +224,19 @@ namespace gym {
                     auto lo = locks[i-1];
 
                     printf("place a key with color [%i, %i, %i] on position (%i, %i)\n",
-                           color[0].item<int>(), color[1].item<int>(), color[2].item<int>(),
-                                   keys[i-1][0].item<int>(), keys[i-1][1].item<int>());
+                           color[0], color[1], color[2], keys[i-1].x, keys[i-1].y);
                     printf("place a lock with color [%i, %i, %i] on (%i, %i)\n",
-                           gcc[0].item<int>(),
-                           gcc[1].item<int>(),
-                           gcc[2].item<int>(),
-                           lo[0].item<int>(), lo[1].item<int>());
+                           gcc[0], gcc[1], gcc[2], lo.x, lo.y);
                 }
-                world[keys[i - 1][0].item<int>()][keys[i - 1][1].item<int>()] = color;
-                world[locks[i - 1][0].item<int>()][locks[i - 1][1].item<int>()] = m_Colors[goal_colors[i - 1]];
+                world.at<BColor>(keys[i - 1].x, keys[i - 1].y)   = color;
+                world.at<BColor>(locks[i - 1].x, locks[i - 1].y) = m_Colors[goal_colors[i - 1]];
             }
 
             // keys[0] is orphaned key, so this happens outside the loop
-            world[first_key[0]][first_key[1]] = m_Colors[goal_colors[0]];
+            world.at<BColor>(first_key.x, first_key.y)   = m_Colors[goal_colors[0]];
             if(verbose){
                 printf("place the first key with color %i on position (%i, %i)\n",
-                       goal_colors[0], first_key[0].item<int>(), first_key[1].item<int>());
+                       goal_colors[0], first_key.x, first_key.y );
             }
 
             // A dead end is the end of a distractor branch, saved as color so it's consistent with world representation.
@@ -254,63 +248,49 @@ namespace gym {
                 // Choose x,y locations for keys and locks from keys and locks (previously determined so nothing collides)
                 auto start_index = m_GoalLength - 1 + i * m_DistractorLength;
                 auto end_index = m_GoalLength - 1 + (i + 1) * m_DistractorLength;
-                auto key_distractor = keys.slice(0, start_index, end_index);
-                auto lock_distractor = locks.slice(0, start_index, end_index);
+                auto key_distractor = slice(keys, start_index, end_index);
+                auto lock_distractor = slice(locks, start_index, end_index);
 
                 // Determine colors and place key, lock-pairs
-                torch::Tensor color_key;
-                for (size_t k = 0; k < key_distractor.size(0); k++) {
-                    auto key = key_distractor[i];
-                    auto lock = lock_distractor[i];
-                    torch::Tensor color_lock;
+                BColor color_key;
+                for (size_t k = 0; k < key_distractor.size(); k++) {
+                    auto key = key_distractor[k];
+                    auto lock = lock_distractor[k];
+                    BColor color_lock;
                     if (k == 0)
                         color_lock = m_Colors[goal_colors[root]];
                     else
                         color_lock = m_Colors[distractor_color[k - 1]];
 
                     color_key = m_Colors[distractor_color[k]];
-                    world[key[0].item<int>()][key[1].item<int>()] = color_key;
-                    world[lock[0].item<int>()][lock[1].item<int>()] = color_lock;
+                    world.at<BColor>( key.x, key.y) = color_key;
+                    world.at<BColor>( lock.x, lock.y)  = color_lock;
                 }
-                dead_ends.push_back( toColor(color_key) );
+                dead_ends.push_back( color_key );
             }
         }
 
         // Place an agent
-        world[agent_pos[0].item<int>()][agent_pos[1].item<int>()] = AGENT_COLOR;
+        world.at<BColor>(agent_pos.x, agent_pos.y) = AGENT_COLOR;
 
         // Convert goal colors to rgb so they have the same format as returned world
         std::vector<BColor> goal_colors_rgb;
         for (int goal_color: goal_colors)
-            goal_colors_rgb.push_back( toColor(m_Colors[goal_color]) );
+            goal_colors_rgb.push_back( m_Colors[goal_color] );
 
         // Add outline to world by padding
-        world = torch::nn::functional::pad(world.permute({2, 0, 1}),
-                                           torch::nn::functional::PadFuncOptions({1, 1, 1, 1, 0, 0}));
-        agent_pos += torch::tensor({1, 1});
+        cv::copyMakeBorder( world, world, 1, 1, 1, 1, cv::BORDER_CONSTANT, 0 );
+        agent_pos = agent_pos + mg::Point{1, 1};
 
-        return {world, {agent_pos[0].item().toInt(), agent_pos[1].item().toInt()}, dead_ends, goal_colors_rgb};
+        return {world, agent_pos, dead_ends, goal_colors_rgb};
     }
 
     void gym::BoxWorld::render() {
-        // If a viewer does not exist, create it
-        if (!m_Viewer) {
-            m_Viewer = std::make_unique<Viewer>((n + 2) * SCALE, (n + 2) * SCALE, "BoxWorld");
-            m_Viewer->setBounds(0, n + 2, 0, n + 2);
-        }
-
-        // Render each pixel as a polygon
-        for (int x = 0; x < n + 2; x++) {
-            for (int y = 0; y < n + 2; y++) {
-                auto vertices = m_GridVertices[y * (n + 2) + x];
-                auto c = Color{m_World[0][x][y].item<uint8_t>() / 255.0f,
-                               m_World[1][x][y].item<uint8_t>() / 255.0f,
-                               m_World[2][x][y].item<uint8_t>() / 255.0f};
-                m_Viewer->drawPolygon(vertices, {&c});
-            }
-        }
-
-        m_Viewer->render();
+        auto s = m_World.clone();
+        cv::resize(s, s, {s.size[0]*SCALE, s.size[0]*SCALE}, 0, 0, cv::INTER_AREA);
+        cv::cvtColor(s, s, cv::COLOR_RGB2BGR);
+        cv::imshow("world", s);
+        cv::waitKey(100);
 
     }
 

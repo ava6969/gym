@@ -28,8 +28,7 @@ namespace gym {
 
         explicit RandomBoxWorld(RandomBoxWorld::Option const& );
 
-        std::tuple<torch::Tensor, std::array<int, 2>, std::vector< BColor>, std::vector<BColor>>  world_gen()
-        override;
+        std::tuple<cv::Mat, mg::Point, std::vector<BColor>, std::vector<BColor>>  world_gen() override;
 
     private:
         Option opt;

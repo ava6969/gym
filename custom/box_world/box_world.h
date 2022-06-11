@@ -9,12 +9,14 @@
 #include "spaces/box.h"
 #include "spaces/discrete.h"
 #include "common/rendering.h"
+#include "opencv2/core.hpp"
+#include "../minigrid/common.h"
 #include "torch/torch.h"
+#include "span"
 
 
-#define BoxColor(...) torch::tensor({ __VA_ARGS__ }, torch::kUInt8)
-
-using BColor = std::array<uint8_t, 3>;
+#define BoxColor(...) cv::Vec3b({ __VA_ARGS__ })
+using BColor = cv::Vec3b;
 
 namespace gym {
 
@@ -40,17 +42,17 @@ namespace gym {
      * reward_wrong_key     reward for getting a wrong key
      * max_steps            maximum number of steps before terminating
      */
-    class BoxWorld : public Env< torch::Tensor, int> {
+class BoxWorld : public Env< cv::Mat, int> {
     private:
 
         // Constants
-        torch::Tensor m_state;
-        static constexpr int SCALE = 10;
+
+        static constexpr int SCALE = 40;
         static constexpr int MAX_COLORS = 20;
-        inline static const torch::Tensor AGENT_COLOR = BoxColor(128, 128, 128);
-        inline static const torch::Tensor GOAL_COLOR = BoxColor(255, 255, 255);
-        inline static const torch::Tensor BACKGROUND_COLOR = BoxColor(220, 220, 220);
-        inline static const torch::Tensor COLORS[MAX_COLORS] = {
+        inline static const cv::Vec3b AGENT_COLOR = BoxColor(128, 128, 128);
+        inline static const cv::Vec3b GOAL_COLOR = BoxColor(255, 255, 255);
+        inline static const cv::Vec3b BACKGROUND_COLOR = BoxColor(220, 220, 220);
+        inline static const cv::Vec3b COLORS[MAX_COLORS] = {
                 BoxColor(0, 0, 117),
                 BoxColor(230, 190, 255),
                 BoxColor(170, 255, 195),
@@ -72,19 +74,21 @@ namespace gym {
                 BoxColor(70, 153, 144),
                 BoxColor(100, 70, 0)
         };
-        static constexpr int CHANGE_COORDINATES[][2] = {
-                {-1, 0},
-                {1,  0},
-                {0,  -1},
-                {0,  1}
+
+        static inline std::array<mg::Point, 4> CHANGE_COORDINATES = {
+                mg::Point{-1, 0},
+                mg::Point{1,  0},
+                mg::Point{0,  -1},
+                mg::Point{0,  1}
         };
 
         // Environment properties
         int n;
         int m_NumPairs;
         int m_NumColors;
-        std::vector<torch::Tensor> m_Colors;
+        std::vector<cv::Vec3b> m_Colors;
         int m_MaxSteps;
+        cv::Mat state;
 
         float m_StepCost;
         float m_RewardGem;
@@ -94,8 +98,8 @@ namespace gym {
 
         // Used during environment execution
         int m_NumEnvSteps;
-        torch::Tensor m_World;
-        std::array<int, 2> m_PlayerPosition;
+        cv::Mat m_World;
+        mg::Point m_PlayerPosition;
         std::vector<BColor> m_DeadEnds;
         std::vector<BColor> m_CorrectKeys;
         BColor m_OwnedKey;
@@ -105,23 +109,17 @@ namespace gym {
         std::vector<std::vector<sf::Vector2f>> m_GridVertices;
 
         // Checks if a space is empty.
-        static bool is_empty(torch::Tensor space);
+        static bool is_empty(cv::Vec3b const& space);
 
         // Updates the color of a space after an agent moves.
-        void update_color(torch::Tensor& world, std::array<int, 2> const&, std::array<int, 2>  const& new_pos);
+        static void update_color(cv::Mat & world, mg::Point const&, mg::Point const& new_pos);
 
         // Generates random key,lock pairs locations in the environment.
-        std::array<torch::Tensor, 4> sample_pair_locations(int num_pair);
+        std::tuple< std::vector<mg::Point>, std::vector<mg::Point>, mg::Point, mg::Point>
+                sample_pair_locations(int num_pair);
 
-        static inline BColor toColor(torch::Tensor const& x){
-            return {x[0].item<uint8_t>(),
-                    x[1].item<uint8_t>(),
-                    x[2].item<uint8_t>()};
-        }
-
-        static inline torch::Tensor toTensor(BColor const& x){
-            return torch::tensor({x[0], x[1], x[2]});
-        }
+        inline auto& worldAt(mg::Point const& x) { return m_World.at<BColor>(x.x, x.y); }
+        inline auto worldAtC(mg::Point const& x) { return m_World.at<BColor>(x.x, x.y); }
 
     protected:
         int m_GoalLength;
@@ -130,7 +128,12 @@ namespace gym {
         bool verbose;
 
         // Generates world from a seed.
-        virtual std::tuple<torch::Tensor, std::array<int, 2>, std::vector<BColor>, std::vector<BColor>>  world_gen();
+        virtual std::tuple<cv::Mat, mg::Point, std::vector<BColor>, std::vector<BColor>>  world_gen();
+
+        template<typename T>
+        inline auto slice(std::vector<T>& x, int i, int j){
+            return std::span<T>(x.begin() + i, x.begin() +  j);
+        }
 
     public:
 
@@ -151,9 +154,9 @@ namespace gym {
 
         explicit BoxWorld(Option const&);
 
-        StepResponse<torch::Tensor> step(int const& action) noexcept final;
+        StepResponse<cv::Mat> step(int const& action) noexcept final;
 
-        torch::Tensor reset() noexcept final;
+        cv::Mat reset() noexcept final;
 
         void render() final;
     };

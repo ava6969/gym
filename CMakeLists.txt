@@ -85,9 +85,7 @@ add_executable(gym_main main.cpp)
 target_link_libraries(gym_main PRIVATE ${DEPENDENCIES} gym )
 target_include_directories(gym_main PRIVATE . )
 
-add_executable(minigrid_ctrl custom/minigrid/manual_control.cpp  )
-target_link_libraries(minigrid_ctrl PRIVATE ${DEPENDENCIES} gym )
-target_include_directories(minigrid_ctrl PRIVATE .)
+
 
 get_target_property(TARGET_LIBRARIES gym LINK_LIBRARIES)
 message("Libraries at start")
