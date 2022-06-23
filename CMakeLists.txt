@@ -26,7 +26,7 @@ find_package(OpenGL REQUIRED)
 find_package(glfw3 3.3 )
 find_package(freetype CONFIG REQUIRED)
 find_package(GLEW REQUIRED)
-
+find_package(glm CONFIG REQUIRED)
 set(OpenCV_DIR ${SAM_PATH}/thirdparty/open_cv/lib/cmake/opencv4)
 find_package(OpenCV REQUIRED core highgui)
 find_package(OpenSSL REQUIRED)
@@ -42,6 +42,7 @@ set(DEPENDENCIES
 		OpenGL::GLU
 		glfw ${GLEW_LIBRARIES} freetype
 		box2d::box2d
+		glm::glm
 		${OpenCV_LIBS}
 		${TORCH_LIBRARIES}
 		${LIBVIZDOOM}
