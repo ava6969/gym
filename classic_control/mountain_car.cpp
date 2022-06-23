@@ -2,6 +2,7 @@
 // Created by Ben Giacalone on 9/5/2021.
 //
 #include "common/utils.h"
+#include "../common/rendering.h"
 #include "mountain_car.h"
 
 namespace gym{

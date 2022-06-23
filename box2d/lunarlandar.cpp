@@ -1,43 +1,11 @@
 //
 // Created by dewe on 8/23/21.
 //
-
+#include "contact_listen.h"
 #include "common/utils.h"
 #include "lunarlandar.h"
 
 namespace gym {
-
-    template<bool cont>
-    void ContactDetector<cont>::setGroundContact(b2Contact *contact, b2Body *leg, bool value) {
-        auto const &bodyA = contact->GetFixtureA()->GetBody();
-        auto const &bodyB = contact->GetFixtureB()->GetBody();
-
-        if (leg == bodyA or leg == bodyB) {
-            auto &groundContact = reinterpret_cast<UserData *>( leg->GetUserData().pointer )->m_GroundContact;
-            groundContact = value;
-        }
-    }
-
-    template<bool cont>
-    void ContactDetector<cont>::BeginContact(b2Contact *contact) {
-
-        auto *bodyA = contact->GetFixtureA()->GetBody();
-        auto *bodyB = contact->GetFixtureB()->GetBody();
-
-        if (m_Env->lander() == bodyA or
-            m_Env->lander() == bodyB) {
-            m_Env->setGameOver();
-        }
-
-        setGroundContact(contact, m_Env->leg(0), true);
-        setGroundContact(contact, m_Env->leg(1), true);
-    }
-
-    template<bool cont>
-    void ContactDetector<cont>::EndContact(b2Contact *contact) {
-        setGroundContact(contact, m_Env->leg(0), false);
-        setGroundContact(contact, m_Env->leg(1), false);
-    }
 
     template<bool cont>
     std::vector<float> LunarLandarEnv<cont>::reset() noexcept {
@@ -57,90 +25,92 @@ namespace gym {
             ch = W / float(CHUNKS - 1) * float(i++);
         }
 
-        m_HelipadX1 = chunkX[int(CHUNKS / 2) - 1];
-        m_HelipadX2 = chunkX[int(CHUNKS / 2) + 1];
+        m_HelipadX1 = chunkX[floor_div(CHUNKS, 2) - 1];
+        m_HelipadX2 = chunkX[floor_div(CHUNKS, 2) + 1];
         m_HelipadY = H / 4;
 
-        height[int(CHUNKS / 2) - 2] = m_HelipadY;
-        height[int(CHUNKS / 2) - 1] = m_HelipadY;
-        height[int(CHUNKS / 2) + 0] = m_HelipadY;
-        height[int(CHUNKS / 2) + 1] = m_HelipadY;
-        height[int(CHUNKS / 2) + 2] = m_HelipadY;
+        height[floor_div(CHUNKS, 2) - 2] = m_HelipadY;
+        height[floor_div(CHUNKS, 2) - 1] = m_HelipadY;
+        height[floor_div(CHUNKS, 2) + 0] = m_HelipadY;
+        height[floor_div(CHUNKS, 2) + 1] = m_HelipadY;
+        height[floor_div(CHUNKS, 2) + 2] = m_HelipadY;
 
         i = 0;
         for (auto &v: smoothY) {
-            v = 0.33f * (height[i - 1] + height[i] + height[i + 1]);
-            i++;
+            v = 0.33f * (height[i - 1] + height[i + 0] + height[i + 1]); i++;
         }
 
-        m_Moon = box2d::util::createStaticBody(m_World.get(),
-                                               {b2Vec2{0.f, 0.f}, {W, 0}});
+        auto edgeShape = box2d::util::edgeShape<2>( { b2Vec2{0.f, 0.f}, {W, 0}} );
+        b2Shape* shape = &edgeShape;
+        m_Moon.body = box2d::util::CreateStaticBody(*m_World, shape);
 
         for (int j = 0; j < CHUNKS - 1; j++) {
             sf::Vector2f p1{chunkX[j], smoothY[j]};
             sf::Vector2f p2{chunkX[j + 1], smoothY[j + 1]};
-            m_SkyPolys[j] = {p1, p2, {p2[0], H}, {p1[0], H}};
 
-            box2d::util::CreateEdgeFixture(m_Moon,
-                                           {b2Vec2{p1[0], p1[1]},
-                                            b2Vec2{p2[0], p2[1]}});
+            auto tempShape = box2d::util::edgeShape(
+                    std::array<b2Vec2, 2>{b2Vec2{p1[0], p1[1]}, b2Vec2{p2[0], p2[1]}});
+            m_Moon.body->CreateFixture( &box2d::util::FixtureDef(&tempShape, 0).friction(0.1).def );
+
+            m_SkyPolys[j] = {p1, p2, {p2[0], H}, {p1[0], H}};
 
         }
 
-        m_Moon->GetUserData().pointer = reinterpret_cast<uintptr_t>(&moonData);
-        moonData.m_Color1 = {0.0, 0.0, 0.0};
-        moonData.m_Color2 = {0.0, 0.0, 0.0};
+        m_Moon.color = {0.0, 0.0, 0.0};
+        m_Moon.color2 = {0.0, 0.0, 0.0};
+        m_Moon.userData();
 
         auto initialY = VIEWPORT_H / SCALE;
-
-        b2PolygonShape landerShape;
-        std::vector<b2Vec2> points(6);
-        i = 0;
-        std::transform(std::begin(LANDER_POLY), std::end(LANDER_POLY), points.begin(), [](b2Vec2 const &axis) {
-            return b2Vec2{axis.x / SCALE, axis.y / SCALE};
+        auto landerShape = box2d::util::polygonShape(LANDER_POLY, [](auto p){
+            return b2Vec2{p.x/SCALE, p.y/SCALE};
         });
-        landerShape.Set(points.data(), 6);
-        landerShape.m_count = 6;
 
-        m_Lander = box2d::util::CreateDynamicBody(m_World.get(), {VIEWPORT_W / SCALE / 2, initialY}, landerShape, 0.0,
-                                                  5, 0.1);
-        lunarLanderData = {b2Color{0.5, 0.4, 0.9}, {0.3, 0.3, 0.5}, false};
+        b2BodyDef landerBodyDef;
+        landerBodyDef.position = {VIEWPORT_W / SCALE / 2, initialY};
+        landerBodyDef.angle = 0.0;
 
-        m_Lander->GetUserData().pointer = reinterpret_cast<uintptr_t>(&lunarLanderData);
+        m_Lander.body = box2d::util::CreateDynamicBody(*m_World,
+                                                  landerBodyDef,
+                                                  box2d::util::FixtureDef(&landerShape, 5.0).friction(0.1)
+                                                  .restitution(0.0)
+                                                  .categoryBits(0x0010)
+                                                  .maskBits(0x001).def);
+        m_Lander.color = {0.5, 0.4, 0.9};
+        m_Lander.color2 = {0.3, 0.3, 0.5};
+        m_Lander.userData();
 
         auto generatedVec = uniformRandom(-INITIAL_RANDOM, INITIAL_RANDOM, 2, this->m_Device);
-        m_Lander->ApplyForceToCenter({generatedVec.front(), generatedVec.back()}, true);
+        m_Lander.body->ApplyForceToCenter({generatedVec.front(), generatedVec.back()}, true);
 
-        i = -1;
+        float i_ = -1;
         int j = 0;
         for (auto &leg: m_Legs) {
-            b2PolygonShape legShape;
-            legShape.SetAsBox(LEG_W / SCALE, LEG_H / SCALE);
-            legShape.m_count = 4;
-
-            leg = box2d::util::CreateDynamicBody(m_World.get(),
-                                                 {VIEWPORT_W / SCALE / 2.f - i * LEG_AWAY / SCALE, initialY},
-                                                 legShape,
-                                                 i * 0.05f,
-                                                 1.0f,
-                                                 0.2f,
-                                                 0x0020,
-                                                 0x001);
-
-            legData[j] = {b2Color{0.5, 0.4, 0.9}, {0.3, 0.3, 0.5}, false};
-            leg->GetUserData().pointer = reinterpret_cast<uintptr_t>(&legData[j++]);
+            auto _shape = box2d::util::polygonShapeAsBox(LEG_W / SCALE, LEG_H / SCALE);
+            b2BodyDef bodyDef;
+            bodyDef.position = {VIEWPORT_W / SCALE / 2.f - i_ * LEG_AWAY / SCALE, initialY};
+            bodyDef.angle = i_ * 0.05f;
+            leg.body = box2d::util::CreateDynamicBody(*m_World,
+                                                      bodyDef,
+                                                      box2d::util::FixtureDef(&_shape, 1.0)
+                                                      .restitution(0.0)
+                                                      .categoryBits(0x0020)
+                                                      .maskBits(0x001).def);
+            leg.groundContact = false;
+            leg.color = {0.5, 0.4, 0.9};
+            leg.color2 = {0.3, 0.3, 0.5};
+            leg.userData();
 
             b2RevoluteJointDef rjd;
-            rjd.bodyA = m_Lander;
-            rjd.bodyB = leg;
+            rjd.bodyA = m_Lander.body;
+            rjd.bodyB = leg.body;
             rjd.localAnchorA = {0, 0};
-            rjd.localAnchorB = {i * LEG_AWAY / SCALE, LEG_DOWN / SCALE};
+            rjd.localAnchorB = {i_ * LEG_AWAY / SCALE, LEG_DOWN / SCALE};
             rjd.enableMotor = true;
             rjd.enableLimit = true;
             rjd.maxMotorTorque = LEG_SPRING_TORQUE;
-            rjd.motorSpeed = 0.3f * i;
+            rjd.motorSpeed = 0.3f * i_;
 
-            if (i == -1) {
+            if (i_ == -1) {
                 rjd.lowerAngle = {0.9 - 0.5};
                 rjd.upperAngle = 0.9;
             } else {
@@ -148,15 +118,15 @@ namespace gym {
                 rjd.upperAngle = -0.9 + 0.5;
             }
 
-            leg->GetJointList()->joint = m_World->CreateJoint(&rjd);
-            i += 2;
+            leg.body->GetJointList()->joint = m_World->CreateJoint(&rjd);
+            i_ += 2;
         }
         m_DrawList = {m_Lander, m_Legs[0], m_Legs[1]};
 
         if constexpr(cont)
             return step({0.f, 0.f}).observation;
         else
-            return step(1).observation;
+            return step(0).observation;
     }
 
     template<bool cont>
@@ -164,10 +134,10 @@ namespace gym {
 
         ActionT action = _action;
         if constexpr( cont ) {
-            action = { std::clamp(_action[0], -1, 1), std::clamp(_action[1], -1, 1) };
+            action = { std::clamp(_action[0], -1.f, 1.f), std::clamp(_action[1], -1.f, 1.f) };
         }
 
-        auto tip = std::array<float, 2>{sin(m_Lander->GetAngle()), cos(m_Lander->GetAngle())};
+        auto tip = std::array<float, 2>{sin(m_Lander.body->GetAngle()), cos(m_Lander.body->GetAngle())};
         auto side = std::array<float, 2>{-tip[1], tip[0]};
         auto dispersion = uniformRandom<float>(-1, 1, 2, this->m_Device) / SCALE;
         auto mPower = 0.f;
@@ -190,7 +160,7 @@ namespace gym {
             // 4 is move a bit downwards, +-2 for randomness
             auto ox = tip[0] * (4 / SCALE + 2 * dispersion[0]) + side[0] * dispersion[1];
             auto oy = -tip[1] * (4 / SCALE + 2 * dispersion[0]) - side[1] * dispersion[1];
-            auto impulse_pos = b2Vec2{m_Lander->GetPosition().x + ox, m_Lander->GetPosition().y + oy};
+            auto impulse_pos = b2Vec2{m_Lander.body->GetPosition().x + ox, m_Lander.body->GetPosition().y + oy};
 
             auto p = createParticle(3.5, impulse_pos.x, impulse_pos.y, mPower);
             p->ApplyLinearImpulse(
@@ -200,7 +170,7 @@ namespace gym {
                     true
             );
 
-            m_Lander->ApplyLinearImpulse(
+            m_Lander.body->ApplyLinearImpulse(
                     b2Vec2{-ox * MAIN_ENGINE_POWER * mPower,
                            -oy * MAIN_ENGINE_POWER * mPower},
                     impulse_pos,
@@ -217,10 +187,11 @@ namespace gym {
         auto sPower = 0.f;
         if (power_condition_passed) {
 
-            int direction;
+            float direction;
             if constexpr(cont) {
                 direction = std::signbit( action[1] ) ? -1 : 1;
-                sPower = std::clamp( std::abs( action[1] ), 0.5, 1.0);
+                sPower = std::clamp( std::abs( action[1] ), 0.5f, 1.0f);
+                assert(sPower >= 0.5 and sPower <=1);
             } else {
                 direction = action - 2;
                 sPower = 1.f;
@@ -234,8 +205,8 @@ namespace gym {
                     3 * dispersion[1] + direction * SIDE_ENGINE_AWAY / SCALE
             );
 
-            auto impulse_pos = b2Vec2{m_Lander->GetPosition().x + ox - tip[0] * 17 / SCALE,
-                                      m_Lander->GetPosition().y + oy + tip[1] * SIDE_ENGINE_HEIGHT / SCALE};
+            auto impulse_pos = b2Vec2{m_Lander.body->GetPosition().x + ox - tip[0] * 17 / SCALE,
+                                      m_Lander.body->GetPosition().y + oy + tip[1] * SIDE_ENGINE_HEIGHT / SCALE};
 
             auto p = createParticle(0.7, impulse_pos.x, impulse_pos.y, sPower);
             p->ApplyLinearImpulse(
@@ -245,26 +216,25 @@ namespace gym {
                     true
             );
 
-            m_Lander->ApplyLinearImpulse({-ox * SIDE_ENGINE_POWER * sPower,
-                                          -oy * SIDE_ENGINE_POWER * sPower},
-                                         impulse_pos,
-                                         true);
+            m_Lander.body->ApplyLinearImpulse({-ox * SIDE_ENGINE_POWER * sPower,
+                                               -oy * SIDE_ENGINE_POWER * sPower},
+                                              impulse_pos, true);
         }
 
         m_World->Step(1.0 / FPS, 6 * 30, 2 * 30);
 
-        auto const &pos = m_Lander->GetPosition();
-        auto const &vel = m_Lander->GetLinearVelocity();
+        auto const &pos = m_Lander.body->GetPosition();
+        auto const &vel = m_Lander.body->GetLinearVelocity();
 
         std::vector<float> state = {
                 (pos.x - VIEWPORT_W / SCALE / 2) / (VIEWPORT_W / SCALE / 2),
                 (pos.y - (m_HelipadY + LEG_DOWN / SCALE)) / (VIEWPORT_H / SCALE / 2),
                 vel.x * (VIEWPORT_W / SCALE / 2) / FPS,
                 vel.y * (VIEWPORT_H / SCALE / 2) / FPS,
-                m_Lander->GetAngle(),
-                20.0f * m_Lander->GetAngularVelocity() / FPS,
-                legData[0].m_GroundContact ? 1.f : 0.f,
-                legData[1].m_GroundContact ? 1.f : 0.f};
+                m_Lander.body->GetAngle(),
+                20.0f * m_Lander.body->GetAngularVelocity() / FPS,
+                m_Legs[0].groundContact ? 1.f : 0.f,
+                m_Legs[1].groundContact ? 1.f : 0.f};
 
         auto reward = 0.f;
         auto shaping = (
@@ -288,7 +258,7 @@ namespace gym {
             reward = -100;
         }
 
-        if (not m_Lander->IsAwake()) {
+        if (not m_Lander.body->IsAwake()) {
             done = true;
             reward = 100;
         }
@@ -300,8 +270,7 @@ namespace gym {
     LunarLandarEnv<cont>::LunarLandarEnv() :
             m_Viewer(nullptr),
             m_World(std::make_unique<b2World>(b2Vec2{0, -10.f})),
-            m_Moon(nullptr),
-            m_Lander(nullptr),
+            contactDetector(this),
             m_SkyPolys() {
 
         LunarLandarEnv::seed(std::nullopt);
@@ -314,13 +283,13 @@ namespace gym {
         else
             this->m_ActionSpace = makeDiscreteSpace(4);
 
-        reset();
+        LunarLandarEnv<cont>::reset();
     }
 
     template<bool cont>
     void LunarLandarEnv<cont>::destroy() noexcept {
 
-        if (not m_Moon) {
+        if (not m_Moon.body) {
             return;
         }
 
@@ -328,23 +297,25 @@ namespace gym {
 
         cleanParticle(true);
 
-        m_World->DestroyBody(m_Moon);
-        m_Moon = nullptr;
+        m_World->DestroyBody(m_Moon.body);
+        m_Moon.body = nullptr;
 
-        m_World->DestroyBody(m_Lander);
-        m_Lander = nullptr;
+        m_World->DestroyBody(m_Lander.body);
+        m_Lander.body = nullptr;
 
-        m_World->DestroyBody(m_Legs[0]);
-        m_World->DestroyBody(m_Legs[1]);
+        m_World->DestroyBody(m_Legs[0].body);
+        m_World->DestroyBody(m_Legs[1].body);
+
+        m_Legs[0].body = nullptr;
+        m_Legs[1].body = nullptr;
     }
 
     template<bool cont>
     void LunarLandarEnv<cont>::cleanParticle(bool all) noexcept {
         while (not m_Particles.empty() and
-               (all or reinterpret_cast<UserData *>( m_Particles[0]->GetUserData().pointer )->ttl < 0)) {
-            m_World->DestroyBody(m_Particles[0]);
+               (all or m_Particles.front().ttl < 0)) {
+            m_World->DestroyBody(m_Particles[0].body);
             m_Particles.assign(m_Particles.begin() + 1, m_Particles.end());
-            particleData.assign(particleData.begin() + 1, particleData.end());
         }
     }
 
@@ -370,89 +341,67 @@ namespace gym {
         auto p = m_World->CreateBody(&bodyDef);
         p->CreateFixture(&fixtureDef);
 
-        particleData.emplace_back();
-        particleData.back().ttl = ttl;
-        p->GetUserData().pointer = reinterpret_cast<uintptr_t>( &particleData.back());
-        m_Particles.push_back(p);
+        m_Particles.emplace_back(p);
+        m_Particles.back().ttl = ttl;
+        m_Particles.back().userData();
         cleanParticle(false);
         return p;
     }
 
     template<bool cont>
-    void gym::LunarLandarEnv<cont>::render(RenderType) {
+    void gym::LunarLandarEnv<cont>::render() {
 
         if (not m_Viewer) {
             m_Viewer = std::make_unique<Viewer>(VIEWPORT_W, VIEWPORT_H, "LunarLandar");
             m_Viewer->setBounds(0, VIEWPORT_W / SCALE, 0, VIEWPORT_H / SCALE);
         }
 
-        for (auto const &obj: m_Particles) {
-            auto *data = reinterpret_cast<UserData *>(obj->GetUserData().pointer);
-            data->ttl -= 0.15;
-
-            data->m_Color1 = {
-                    std::max(0.2f, 0.2f + data->ttl),
-                    std::max(0.2f, 0.5f + data->ttl),
-                    std::max(0.2f, 0.5f + data->ttl)
+        for (auto &obj: m_Particles) {
+            obj.ttl -= 0.15;
+            obj.color = {
+                    std::max(0.2f, 0.2f + obj.ttl),
+                    std::max(0.2f, 0.5f + obj.ttl),
+                    std::max(0.2f, 0.5f + obj.ttl)
             };
 
-            data->m_Color2 = data->m_Color1;
+            obj.color2 = obj.color;
         }
 
         cleanParticle(false);
 
+        Color c{0, 0, 0};
         for (auto const &p: m_SkyPolys) {
-            Color c{0, 0, 0};
             m_Viewer->drawPolygon(p, {&c});
         }
 
-        auto particlesAndDrawList = m_Particles;
-
+        std::vector<box2d::DrawableBodyBase> particlesAndDrawList;
+        particlesAndDrawList.insert(particlesAndDrawList.end(), m_Particles.begin(), m_Particles.end());
         particlesAndDrawList.insert(particlesAndDrawList.end(), m_DrawList.begin(), m_DrawList.end());
 
         for (auto &obj: particlesAndDrawList) {
-            auto *f = obj->GetFixtureList();
+            auto *f = obj.body->GetFixtureList();
             while (f) {
                 auto trans = f->GetBody()->GetTransform();
-                auto *data = reinterpret_cast<UserData *>(obj->GetUserData().pointer);
-                if (f->GetShape()->GetType() == b2Shape::e_circle) {
-                    auto circleShape = dynamic_cast<b2CircleShape *>(f->GetShape());
-                    assert(circleShape);
+                if (auto shape = dynamic_cast<b2CircleShape*>(f->GetShape())) {
 
-                    sf::Vector2f v = {trans.p.x + circleShape->m_p.x,
-                                      trans.p.y + circleShape->m_p.y};
-
-                    Color c1 = data->m_Color1;
-                    Color c2 = data->m_Color1;
-
+                    auto t = trans*shape->m_p;
                     m_Viewer->drawFilledCircle(
                             f->GetShape()->m_radius, 20,
-                            {&c1})->addAttr(std::make_unique<Transform>(v));
+                            {obj.colorAttr()})->addAttr(std::make_unique<Transform>(t));
 
                     m_Viewer->drawLinedCircle(f->GetShape()->m_radius, 20,
-                                              {&c2})->addAttr(std::make_unique<Transform>(v));
+                                              {obj.color2Attr(), obj.lineWidth(2)}
+                                              )->addAttr(std::make_unique<Transform>(t));
 
                 } else {
                     auto polygonShape = dynamic_cast<b2PolygonShape *>(f->GetShape());
                     assert(polygonShape);
 
-                    Vertices path;
-
-                    std::transform(std::begin(polygonShape->m_vertices),
-                                   std::begin(polygonShape->m_vertices) + polygonShape->m_count,
-                                   std::back_inserter(path), [&trans](b2Vec2 v) {
-                                return sf::Vector2f{v.x + trans.p.x, v.y + trans.p.y};
-                            });
-
-                    Color c = data->m_Color1;
-                    m_Viewer->drawPolygon(path, {&c});
-
+                    auto path = trans*polygonShape->m_vertices;
+                    m_Viewer->drawPolygon(path, {obj.colorAttr()});
                     path.push_back(path[0]);
 
-                    Color c2 = data->m_Color2;
-                    LineWidth l(2);
-
-                    m_Viewer->drawPolyLine(path, {&c2, &l});
+                    m_Viewer->drawPolyLine(path, {obj.color2Attr(), obj.lineWidth(2)});
                 }
 
                 f = f->GetNext();
@@ -476,6 +425,9 @@ namespace gym {
         }
         m_Viewer->render();
     }
+
+     template class LunarLandarEnv<true>;
+     template class LunarLandarEnv<false>;
 }
 
 

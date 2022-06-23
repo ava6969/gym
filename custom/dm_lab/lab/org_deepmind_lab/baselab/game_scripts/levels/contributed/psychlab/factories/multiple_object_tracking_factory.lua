@@ -156,7 +156,7 @@ function factory.createLevelApi(kwargs)
         initialDifficultyLevel = kwargs.initialDifficultyLevel,
     }
 
-    -- initialize the motion generation procedure
+    -- fetch the motion generation procedure
     self._motion = psychlab_motion.createRandomBallMotion{
         screenSize = self.screenSize,
         allowableDistanceToWall = kwargs.allowableDistanceToWall,

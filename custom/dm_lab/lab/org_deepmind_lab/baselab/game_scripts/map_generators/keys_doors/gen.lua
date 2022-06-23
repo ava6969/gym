@@ -478,7 +478,7 @@ local function makeLevel(overrideConfig, seed)
   if seed then
     random:seed(seed)
   end
-  initialize(overrideConfig)
+  fetch(overrideConfig)
   repeat
   until tryMakingRooms(overrideConfig)
   return objectsAndMap.makeLevel(roomGrid, objects, objectCodes)

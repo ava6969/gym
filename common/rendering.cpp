@@ -1,7 +1,8 @@
 
 // Created by dewe on 8/25/21.
 //
-
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
 #include <stdexcept>
 #include <string>
 #include "rendering.h"
@@ -24,6 +25,29 @@ namespace gym{
         glEnd();
     }
 
+    void Transform::disable() {
+        glPopMatrix();
+    }
+
+    void Color::enable() {
+        glColor4f(vec4[0], vec4[1], vec4[2], vec4[3]);
+    }
+
+
+    void LineStyle::enable() {
+        glEnable(GL_LINE_STIPPLE);
+        glLineStipple(1, style);
+    }
+
+
+    void LineStyle::disable() {
+        glDisable(GL_LINE_STIPPLE);
+    }
+
+    void LineWidth::enable() {
+        glLineWidth(stroke);
+    }
+
     void PolyLine::render1(){
         glBegin(m_Close ? GL_LINE_LOOP :  GL_LINE_STRIP);
         for(auto const& point : m_Vertex){
@@ -32,16 +56,24 @@ namespace gym{
         glEnd();
     }
 
-    Viewer::Viewer(int width, int height, const std::string &title):
+    Viewer::Viewer(int width, int height, const std::string &title, bool hide):
             m_Width(width),
             m_Height(height){
         std::lock_guard<std::mutex> lck(mtx);
 
         if (!glfwInit())
-            throw std::runtime_error("glfw failed to initialize");
+            throw std::runtime_error("glfw failed to fetch");
+
         auto id = refCount++;
         auto t = title + std::to_string(id);
-        m_Window = glfwCreateWindow(width, height, t.c_str(), nullptr, nullptr);
+
+        if(hide){
+            glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+            m_Window = glfwCreateWindow(width, height, "", nullptr, nullptr);
+        }else{
+            m_Window = glfwCreateWindow(width, height, t.c_str(), nullptr, nullptr);
+        }
+
         if (! m_Window)
         {
             glfwTerminate();
@@ -50,6 +82,13 @@ namespace gym{
 
         glfwGetFramebufferSize(m_Window, &width, &height);
         glfwMakeContextCurrent(m_Window);
+        glewExperimental=true; // Needed in core profile
+        if(glewInit() != GLEW_OK) {
+            throw std::runtime_error("Failed to fetch GLEW");
+        }
+
+        glfwSetInputMode(m_Window, GLFW_STICKY_KEYS, GL_TRUE);
+        glfwSetWindowUserPointer(m_Window, this);
 
         glViewport(0, 0, std::max(1, width), std::max(1, height));
         glMatrixMode(GL_PROJECTION);
@@ -58,10 +97,11 @@ namespace gym{
 
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     }
 
     void Viewer::setBounds(float left, float right, float bottom, float top) {
-        std::lock_guard<std::mutex> lck(mtx);
+//        std::lock_guard<std::mutex> lck(mtx);
         assert(right > left && top > bottom);
 
         auto scaleX = (float)m_Width / (right - left);
@@ -72,7 +112,7 @@ namespace gym{
     }
 
     bool Viewer::render() {
-        std::lock_guard<std::mutex> lck(mtx);
+//        std::lock_guard<std::mutex> lck(mtx);
         m_IsOpen = glfwWindowShouldClose(m_Window);
 
         glClearColor(1, 1, 1, 1);
@@ -100,7 +140,7 @@ namespace gym{
     }
 
     Viewer::~Viewer() {
-        std::lock_guard<std::mutex> lck(mtx);
+//        std::lock_guard<std::mutex> lck(mtx);
         glfwTerminate();
         glfwDestroyWindow(m_Window);
         m_IsOpen = false;
@@ -154,14 +194,16 @@ namespace gym{
             attr->enable();
         });
 
+        width.enable();
         color.enable();
 
         render1();
 
-        std::for_each(attrs.rbegin(), attrs.rend(), [](auto const& attr){
+        std::for_each(attrs.begin(), attrs.end(), [](auto const& attr){
             attr->disable();
         });
 
+        width.disable();
         color.disable();
     }
 

@@ -4,7 +4,7 @@ set(CMAKE_TOOLCHAIN_FILE $ENV{HOME}/vcpkg/scripts/buildsystems/vcpkg.cmake CACHE
 set(Torch_DIR $ENV{HOME}/libtorch/share/cmake/Torch CACHE STRING "Path to Torch ROOT DIR")
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 set(CMAKE_VISIBILITY_INLINES_HIDDEN YES)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS} -ffat-lto-objects -fPIC ")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  ${TORCH_CXX_FLAGS} -ffat-lto-objects -fPIC ")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
 
 project(gym)
@@ -24,6 +24,8 @@ include_directories(third_party ${OPENGL_INCLUDE_DIR} ${THIRD_PARTY}/viz_doom/in
 find_package(box2d CONFIG REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(glfw3 3.3 )
+find_package(freetype CONFIG REQUIRED)
+find_package(GLEW REQUIRED)
 
 set(OpenCV_DIR ${SAM_PATH}/thirdparty/open_cv/lib/cmake/opencv4)
 find_package(OpenCV REQUIRED core highgui)
@@ -32,23 +34,25 @@ find_package(Torch REQUIRED)
 find_package(Boost COMPONENTS filesystem thread system date_time chrono regex   REQUIRED)
 find_package(Threads REQUIRED)
 
+add_subdirectory(third_party)
 set(DEPENDENCIES
 		${Boost_LIBRARIES}
 		${ALE_LIB}
 		 OpenGL::GL
-		glfw
+		OpenGL::GLU
+		glfw ${GLEW_LIBRARIES} freetype
 		box2d::box2d
 		${OpenCV_LIBS}
 		${TORCH_LIBRARIES}
 		${LIBVIZDOOM}
 		${CMAKE_THREAD_LIBS_INIT}
 		OpenSSL::SSL OpenSSL::Crypto
+		glfont
 		)
 
 add_library(gym STATIC "" common/tensor_adapter.cpp custom/dm_lab/lab.cpp)
-
 target_link_libraries(gym PRIVATE ${DEPENDENCIES})
-target_include_directories(gym PRIVATE .  ${OPENGL_INCLUDE_DIR} ${OpenCV_INCLUDE_DIRS} ${TORCH_INCLUDE_DIRS})
+target_include_directories(gym PRIVATE . ${GLEW_INCLUDE_DIRS}  ${OPENGL_INCLUDE_DIR} ${OpenCV_INCLUDE_DIRS} ${TORCH_INCLUDE_DIRS})
 target_compile_options(gym PRIVATE -fvisibility=hidden)
 set_target_properties(gym PROPERTIES CXX_VISIBILITY_PRESET "hidden" CUDA_VISIBILITY_PRESET "hidden")
 
@@ -58,13 +62,8 @@ add_subdirectory(classic_control)
 add_subdirectory(wrappers)
 add_subdirectory(custom)
 
-#if(${ADD_ATARI})
-	add_subdirectory(atari)
-#endif()
-
-if(${ADD_BOX2D})
-	add_subdirectory(box2d)
-endif()
+add_subdirectory(atari)
+add_subdirectory(box2d)
 
 if(${BUILD_TEST})
 	find_package(Catch2 CONFIG REQUIRED)
@@ -84,9 +83,3 @@ install (FILES env.h DESTINATION include/gym )
 add_executable(gym_main main.cpp)
 target_link_libraries(gym_main PRIVATE ${DEPENDENCIES} gym )
 target_include_directories(gym_main PRIVATE . )
-
-
-
-get_target_property(TARGET_LIBRARIES gym LINK_LIBRARIES)
-message("Libraries at start")
-message(${TARGET_LIBRARIES})

@@ -274,7 +274,7 @@ function factory.createLevelApi(kwargs)
 
     psychlab_helpers.setTrialsPerEpisodeCap(self, kwargs.trialsPerEpisodeCap)
 
-    -- initialize the adaptive staircase procedure
+    -- fetch the adaptive staircase procedure
     self.setSize = 1
     self.staircase = initStaircase{
         demoteFunction = function ()

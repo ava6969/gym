@@ -7,7 +7,6 @@
 
 #include <opencv2/core/mat.hpp>
 #include "../env.h"
-#include <unsupported/Eigen/CXX11/Tensor>
 #include "../common/rendering.h"
 
 namespace gym {

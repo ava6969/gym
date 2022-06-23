@@ -190,7 +190,7 @@ function factory.createLevelApi(kwargs)
 
     psychlab_helpers.setTrialsPerEpisodeCap(self, kwargs.trialsPerEpisodeCap)
 
-    -- initialize the adaptive staircase procedure
+    -- fetch the adaptive staircase procedure
     self.staircase = psychlab_staircase.createStaircase1D{
         sequence = kwargs.setSizes,
         correctRewardSequence = kwargs.correctRewardSequence,

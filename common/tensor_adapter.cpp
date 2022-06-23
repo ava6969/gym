@@ -102,6 +102,11 @@ namespace gym {
     }
 
     template<>
+    void TensorAdapter::decode(torch::Tensor const& v, std::vector<long double>& out) {
+        _decode<long double>(v, out);
+    }
+
+    template<>
     void TensorAdapter::decode(torch::Tensor const& v, std::vector<std::vector<int>> & out) {
         _decode(v, out);
     }
@@ -122,6 +127,11 @@ namespace gym {
     }
 
     template<>
+    void TensorAdapter::decode(torch::Tensor const& v, std::vector<std::vector<long double>> & out) {
+        _decode<long double>(v, out);
+    }
+
+    template<>
     torch::Tensor TensorAdapter::encode(std::vector<double> && x) {
         return torch::tensor( x );
     }
@@ -134,6 +144,11 @@ namespace gym {
     template<>
     torch::Tensor TensorAdapter::encode(std::vector<float> && x) {
         return torch::tensor( x );
+    }
+
+    template<>
+    torch::Tensor TensorAdapter::encode(std::vector<long double> && x) {
+        return torch::tensor( std::vector<double>(x.begin(), x.end()) );
     }
 
 }

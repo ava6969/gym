@@ -9,66 +9,24 @@
 #include "env.h"
 #include "utils.h"
 #include "../common/rendering.h"
+#include "contact_listen.h"
+
 
 namespace gym{
-
-    const static int FPS = 50;
-    const static float SCALE = 30.0;  // affects how fast-paced the game is, forces should be adjusted as well
-    const static float MAIN_ENGINE_POWER = 13.0;
-    const static float SIDE_ENGINE_POWER = 0.6;
-    const static float INITIAL_RANDOM = 1000.0; // Set 1500 to make game harder
-    const static std::array<b2Vec2, 6> LANDER_POLY =
-            {b2Vec2{-14, +17},
-             {-17, 0},
-             {-17, -10},
-             {+17, -10},
-             {+17, 0},
-             {+14, +17}};
-    const static int   LEG_AWAY = 20;
-    const static int   LEG_DOWN = 18;
-    const static int   LEG_W    = 2;
-    const static int   LEG_H    = 8;
-    const static int   LEG_SPRING_TORQUE = 40;
-    const static float SIDE_ENGINE_HEIGHT = 14.0;
-    const static float SIDE_ENGINE_AWAY = 12.0;
-    const static int   VIEWPORT_W = 600;
-    const static int   VIEWPORT_H = 400;
-    const static float& W = VIEWPORT_W / SCALE;
-    const static float& H = VIEWPORT_H / SCALE;
-    int static  const& CHUNKS = 11;
 
     template<bool continuous>
     class LunarLandarEnv;
 
-    struct UserData{
-        b2Color m_Color1{}, m_Color2{};
-        bool m_GroundContact{false};
-        float ttl=0;
+    struct Leg : box2d::DrawableBodyBase{
+        bool groundContact{false};
     };
 
     template<bool continuous>
-    class ContactDetector : public b2ContactListener{
-
-    private:
-        LunarLandarEnv<continuous>* m_Env;
+    class LunarLandarEnv : public
+            Env<std::vector<float>, std::conditional_t<continuous, std::vector<float>, int > > {
 
     public:
-        explicit ContactDetector(LunarLandarEnv<continuous>* env):m_Env(env){}
-
-        void setGroundContact(b2Contact* contact,
-                              b2Body* leg,
-                              bool value);
-
-        void BeginContact(b2Contact* contact) final;
-
-        void EndContact(b2Contact* contact) final;
-
-    };
-
-    template<bool continuous>
-    class LunarLandarEnv : public Env<std::vector<float>, std::conditional_t<continuous, int, std::vector<float> > > {
-
-    public:
+        using ActionT = std::conditional_t<continuous, std::vector<float>, int >;
         LunarLandarEnv();
 
         std::unique_ptr<class Viewer> m_Viewer;
@@ -77,13 +35,13 @@ namespace gym{
 
         StepResponse< std::vector<float> > step( ActionT const& action) noexcept final;
 
-        void render(RenderType type) final;
+        void render() final;
 
         [[nodiscard]] inline
-        b2Body* leg(int i) const { return m_Legs[i]; }
+        Leg& leg(int i) { return m_Legs[i]; }
 
         [[nodiscard]] inline
-        b2Body* lander() const{ return m_Lander; }
+        b2Body* lander() const{ return m_Lander.body; }
 
         inline void setGameOver(){ m_GameOver = true; }
 
@@ -94,21 +52,43 @@ namespace gym{
         }
 
     private:
+
+        constexpr  static int FPS = 50;
+        constexpr  static float SCALE = 30.0;  // affects how fast-paced the game is, forces should be adjusted as well
+        constexpr  static float MAIN_ENGINE_POWER = 13.0;
+        constexpr  static float SIDE_ENGINE_POWER = 0.6;
+        constexpr  static float INITIAL_RANDOM = 1000.0; // Set 1500 to make game harder
+        inline const static std::array<b2Vec2, 6> LANDER_POLY =
+                {b2Vec2{-14, +17},
+                 {-17, 0},
+                 {-17, -10},
+                 {+17, -10},
+                 {+17, 0},
+                 {+14, +17}};
+        constexpr  static int   LEG_AWAY = 20;
+        constexpr  static int   LEG_DOWN = 18;
+        constexpr  static int   LEG_W    = 2;
+        constexpr  static int   LEG_H    = 8;
+        constexpr  static int   LEG_SPRING_TORQUE = 40;
+        constexpr  static float SIDE_ENGINE_HEIGHT = 14.0;
+        constexpr  static float SIDE_ENGINE_AWAY = 12.0;
+        constexpr  static int   VIEWPORT_W = 600;
+        constexpr  static int   VIEWPORT_H = 400;
+        constexpr  static float W = VIEWPORT_W / SCALE;
+        constexpr  static float H = VIEWPORT_H / SCALE;
+        constexpr  int static CHUNKS = 11;
+
          std::unique_ptr<b2World> m_World;
 
-         ContactDetector<continuous> contactDetector{this};
+         ContactDetector<continuous> contactDetector;
 
-         b2Body* m_Moon{nullptr};
-         b2Body* m_Lander{nullptr};
-         std::vector<b2Body*> m_DrawList;
-         std::vector<b2Body*> m_Legs{2, nullptr}, m_Particles;
+        box2d::DrawableBodyBase m_Moon;
+         box2d::DrawableBodyBase m_Lander;
+         std::vector<box2d::DrawableBodyBase> m_DrawList;
+         std::array<Leg, 2> m_Legs;
+         std::vector<box2d::Particle> m_Particles;
 
          std::array<Vertices, CHUNKS-1> m_SkyPolys;
-
-         UserData lunarLanderData, moonData;
-         std::array<UserData, 2> legData;
-         std::vector<UserData> particleData;
-
          float m_HelipadX1, m_HelipadX2, m_HelipadY;
 
          bool m_GameOver{false};
@@ -122,6 +102,8 @@ namespace gym{
         b2Body* createParticle(float mass, float x, float y, float tt1)  noexcept;
     };
 
+    extern template class LunarLandarEnv<true>;
+    extern template class LunarLandarEnv<false>;
     using LunarLandarEnvDiscrete = LunarLandarEnv<false>;
     using LunarLandarEnvContinuous = LunarLandarEnv<true>;
 }

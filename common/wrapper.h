@@ -169,6 +169,50 @@
         inline typename ActionWrapper<EnvT>::ObservationT  reset() noexcept override { return this->m_Env->reset(); }
     };
 
+    template<typename EnvT, typename OutputT>
+    class ActionWrapper2 : public Env< typename EnvT::ObservationT, OutputT>{
+
+    protected:
+        std::shared_ptr< EnvT > m_Env;
+    public:
+
+        ActionWrapper2(const std::shared_ptr<Space>& actionSpace,
+                            std::shared_ptr< EnvT > env):m_Env( std::move(env)) {
+            this->m_ObservationSpace = this->m_Env->observationSpace();
+            this->m_ActionSpace = actionSpace;
+        }
+
+        ActionWrapper2(const std::unique_ptr<Space>& actionSpace,
+                       std::shared_ptr< EnvT > env):m_Env( std::move(env)) {
+            this->m_ObservationSpace = this->m_Env->observationSpace();
+            this->m_ActionSpace = actionSpace->clone();
+        }
+
+        inline typename EnvT::ObservationT reset() noexcept override {
+            return this->m_Env->reset();
+        }
+
+        inline void render() override{
+            m_Env->render();
+        }
+
+        inline std::string info() override {
+            return this->m_Env->info();
+        }
+
+        inline void seed(std::optional<uint64_t> const& seed) noexcept override {
+            m_Env->seed(seed);
+        }
+
+        virtual typename EnvT::ActionT  action( OutputT const& ) const noexcept = 0;
+
+        inline StepResponse<typename EnvT::ObservationT> step(const OutputT & _action) noexcept override {
+            return this->m_Env->step( action(_action) );
+        }
+
+        inline EnvT* wrapped() { return m_Env.get(); }
+    };
+
     template<typename EnvT>
     class RewardWrapper : public Wrapper<EnvT>{
 

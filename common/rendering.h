@@ -5,7 +5,7 @@
 #ifndef GYMENV_RENDERING_H
 #define GYMENV_RENDERING_H
 
-#include <GLFW/glfw3.h>
+
 #include <array>
 #include <utility>
 #include <vector>
@@ -17,6 +17,7 @@
 #include "unordered_map"
 #include "box2d/box2d.h"
 #include "algorithm"
+
 
 #ifndef M_PI
 #define M_PI 3.141592653589793238
@@ -55,53 +56,37 @@ namespace gym{
         Transform& operator=(Transform&& geom) noexcept;
 
         void enable();
-
-        inline
-        void disable(){
-            glPopMatrix();
-        }
+        void disable();
     };
 
     struct Color : Attr{
         std::array<float, 4> vec4{0, 0, 0, 1};
 
         Color()=default;
-        Color(b2Color c):
+        explicit Color(b2Color c):
                 vec4({c.r, c.g, c.b, c.a}){}
 
         Color(float r, float g, float b):
                 vec4({r, g, b, 1}){};
 
-        inline
-        void enable() override{
-            glColor4f(vec4[0], vec4[1], vec4[2], vec4[3]);
-        }
+        void enable() override;
     };
 
     struct LineStyle : Attr{
-        GLshort style;
+        short style;
 
-        inline
-        void enable() override{
-            glEnable(GL_LINE_STIPPLE);
-            glLineStipple(1, style);
-        }
+        void enable() override;
 
-        inline
-        void disable() override{
-            glDisable(GL_LINE_STIPPLE);
-        }
+        void disable() override;
     };
 
     struct LineWidth : Attr {
-        GLfloat stroke{};
+        float stroke{};
 
         LineWidth()=default;
-        LineWidth(GLfloat _stroke):stroke(_stroke) {}
+        LineWidth(float _stroke):stroke(_stroke) {}
 
-        void enable() override{
-            glLineWidth(stroke);
-        }
+        void enable() override;
     };
 
     struct Geom{
@@ -210,7 +195,7 @@ namespace gym{
         inline static int refCount = 0;
         inline static std::mutex mtx;
     public:
-        explicit Viewer(int width, int height, std::string const& title);
+        explicit Viewer(int width, int height, std::string const& title, bool hide=false);
 
         void setBounds(float left, float right, float bottom, float top);
 
@@ -241,10 +226,14 @@ namespace gym{
                                 sf::Vector2f const&  end,
                                 Attributes const& attrs={});
 
+        [[nodiscard]] inline auto& oneTimeGeoms() const { return m_OneTimeGeoms; }
+        inline void resetOneTimeGeoms()  {  m_OneTimeGeoms.clear(); }
+        inline auto win() { return m_Window; }
+
         ~Viewer();
 
     private:
-        GLFWwindow* m_Window;
+        class  GLFWwindow* m_Window;
         bool m_IsOpen;
         int m_Width, m_Height;
 

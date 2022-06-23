@@ -90,12 +90,6 @@ namespace gym{
 
             auto response = env->step( m_Actions[rank] );
             if( response.done && m_AutoReset ){
-                if(response.info.contains("episode")){
-                    if( std::any_cast<Result>(response.info["episode"]).l == 1){
-                        printf("\n");
-                    }
-                }
-
                 response.observation = env->reset();
             }
             m_BufInfos[rank] = std::move( response.info );

@@ -94,7 +94,7 @@ class SoundNull : public stella::Sound
 
     /**
       Should be called to close the sound device.  Once called the sound
-      device can be started again using the initialize method.
+      device can be started again using the fetch method.
     */
     void close() { }
 

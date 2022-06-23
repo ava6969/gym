@@ -102,7 +102,7 @@ namespace stella {
   predict the data initially contained in the "hot addresses".  Therefore,
   hardware will force slot 3 to always point to ROM block $FF immediately
   after any read or write to the RESET vector at $FFFC-$FFFD.  Block $FF
-  must contain code to initialize the 4 memory slots to point to the desired
+  must contain code to fetch the 4 memory slots to point to the desired
   physical memory blocks before any other code can be executed.  After program
   execution jumps out of the boot code, the hardware will release slot 3 and
   it will function just like any other slot.
