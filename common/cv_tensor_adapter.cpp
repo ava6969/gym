@@ -13,7 +13,18 @@ namespace gym {
     template<>
     torch::Tensor TensorAdapter::encode(cv::Mat &&x) {
         auto[r, c, n] = std::make_tuple(x.rows, x.cols, x.channels());
-        return torch::from_blob(x.data, {r, c, n}, {torch::kUInt8});
+        c10::ScalarType t;
+        switch (x.type()) {
+            case CV_32F:
+                t = torch::kF32;
+                break;
+            default:
+                t = torch::kUInt8;
+        }
+
+        return (c == 1 && n == 1) ?
+        torch::from_blob(x.data, {r*c*n}, {t}).clone() :
+        torch::from_blob(x.data, {r, c, n}, {t}).clone();
     }
 
 }
