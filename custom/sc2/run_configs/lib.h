@@ -129,6 +129,8 @@ namespace sc2{
 
         RunConfig(Option _opt) : opt(_opt), version(get_version(opt.version)) {}
 
+        static std::shared_ptr<RunConfig> get(std::optional<std::string> const & _version = std::nullopt);
+
     private:
         Option opt;
         Version version;
@@ -184,8 +186,6 @@ namespace sc2{
 
             return {};
         }
-
-        std::shared_ptr<RunConfig> get(std::optional<std::string> const & _version = std::nullopt);
     };
 
 }

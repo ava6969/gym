@@ -9,7 +9,7 @@
 #include "optional"
 #include "filesystem"
 #include "custom/sc2/registry.h"
-
+#include "custom/sc2/run_parallel.h"
 
 namespace sc2{
 
@@ -54,6 +54,13 @@ namespace sc2{
         int num_agents;
         Option opt;
         std::optional<int> last_step_time{std::nullopt};
+        std::shared_ptr<RunConfig>  runConfig;
+        RunParallel parallel;
+        std::optional<std::string> game_info, requested_races;
+
+        void launch_game();
+        void create_join();
+        void finalize(bool);
     };
 }
 
