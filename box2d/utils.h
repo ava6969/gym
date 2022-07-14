@@ -5,6 +5,7 @@
 #ifndef GYMENV_UTILS_H
 #define GYMENV_UTILS_H
 
+#include <variant>
 #include "optional"
 #include "set"
 #include "deque"
@@ -64,6 +65,7 @@ namespace gym::box2d{
         b2Body* body{nullptr};
         std::set<std::string> flags{};
         std::optional<float> phase{0};
+        std::unordered_map<std::string, std::variant<int, float, double, bool> > attribs;
         Color color2{};
 
         DrawableBodyBase()=default;
@@ -75,7 +77,7 @@ namespace gym::box2d{
             w.DestroyBody(body);
         }
 
-        virtual void userData(){
+        virtual void setUserData(){
             body->GetUserData().pointer = reinterpret_cast<uintptr_t>(this);
         }
 
@@ -94,7 +96,7 @@ namespace gym::box2d{
         Particle(): DrawableBodyBase(nullptr){}
         explicit Particle(b2Body* b): DrawableBodyBase(b){}
 
-        void userData() override{
+        void setUserData() override{
             body->GetUserData().pointer = reinterpret_cast<uintptr_t>(this);
         }
     };
@@ -220,7 +222,8 @@ namespace gym::box2d::util{
     template<size_t N>
     struct PolygonFixtureDef : FixtureDef{
 
-        PolygonFixtureDef( std::array< std::array<float, 2>, 4> const& x ):m_Vertices(x){
+        PolygonFixtureDef()=default;
+        explicit PolygonFixtureDef( std::array< std::array<float, 2>, 4> const& x ):m_Vertices(x){
             s = polygonShape(x);
 
             FixtureDef::vertices(&s);
@@ -234,18 +237,22 @@ namespace gym::box2d::util{
         }
 
     private:
-        const std::array< std::array<float, 2>, 4> m_Vertices;
+        std::array< std::array<float, 2>, 4> m_Vertices;
         b2PolygonShape s;
 
     };
 
     template<class T>
-    inline typename  T::value_type const & at(T const& x, int i){
+    inline typename  T::value_type  at(T const& x, int i){
         return i >= 0 ? x.at(i) : x.at(x.size() + i);
     }
 
-    template<class T>
-    inline T sign(T x) { return  x > 0 ? 1 : (x < 0 ? -1 : 0);  };
+    template<class T, class V>
+    inline void set(T& x, int i, V&& v){
+        x.at(i >= 0 ? i : x.size() + i) = std::forward<V>(v);
+    }
+
+    template <typename T> T sign(T val) { return (T(0) < val) - (val < T(0)); }
     Body createBody(b2World& world, b2BodyDef const& def);
     Body createBody(b2World& world, b2BodyDef const& def, std::vector<b2FixtureDef> const& fixtures);
     Body createBody(b2World& world, b2BodyDef const& def, b2FixtureDef const & fixture);
@@ -256,6 +263,7 @@ namespace gym::box2d::util{
                     b2Shape const& shape,
                     b2FixtureDef const& shapeFixture);
     Fixtures createBody(Body body, Shape shape, b2FixtureDef const& shapeFixture);
+
     Body createBody(b2World& world, b2BodyDef const& def, Shape shape, b2FixtureDef const& shapeFixture);
 
     Fixtures CreateFixturesFromShapes(Body body, std::vector<Shape> const& shapes);

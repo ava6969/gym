@@ -23,7 +23,7 @@ namespace gym{
 
     template<bool continuous>
     class LunarLandarEnv : public
-            Env<std::vector<float>, std::conditional_t<continuous, std::vector<float>, int > > {
+            Env<std::vector<double>, std::conditional_t<continuous, std::vector<float>, int > > {
 
     public:
         using ActionT = std::conditional_t<continuous, std::vector<float>, int >;
@@ -31,9 +31,9 @@ namespace gym{
 
         std::unique_ptr<class Viewer> m_Viewer;
 
-        std::vector<float> reset()  noexcept final;
+        std::vector<double> reset()  noexcept final;
 
-        StepResponse< std::vector<float> > step( ActionT const& action) noexcept final;
+        StepResponse< std::vector<double> > step( ActionT const& action) noexcept final;
 
         void render() final;
 
@@ -41,15 +41,12 @@ namespace gym{
         Leg& leg(int i) { return m_Legs[i]; }
 
         [[nodiscard]] inline
-        b2Body* lander() const{ return m_Lander.body; }
+        b2Body* lander() const{ return m_Lander->body; }
 
         inline void setGameOver(){ m_GameOver = true; }
 
         inline void resetGameOver(){ m_GameOver = false; }
 
-        inline void seed(std::optional<uint64_t> const& seed) noexcept override{
-            this->m_Device.seed(seed.value_or(std::chrono::high_resolution_clock::now().time_since_epoch().count()));
-        }
 
     private:
 
@@ -80,20 +77,20 @@ namespace gym{
 
          std::unique_ptr<b2World> m_World;
 
-         ContactDetector<continuous> contactDetector;
+         std::optional<ContactDetector<continuous>> contactDetector;
 
-        box2d::DrawableBodyBase m_Moon;
-         box2d::DrawableBodyBase m_Lander;
+         std::optional<box2d::DrawableBodyBase> m_Moon;
+         std::optional<box2d::DrawableBodyBase> m_Lander;
          std::vector<box2d::DrawableBodyBase> m_DrawList;
          std::array<Leg, 2> m_Legs;
-         std::vector<box2d::Particle> m_Particles;
+         std::deque<box2d::Particle> m_Particles;
 
          std::array<Vertices, CHUNKS-1> m_SkyPolys;
-         float m_HelipadX1, m_HelipadX2, m_HelipadY;
+         float m_HelipadX1{}, m_HelipadX2{}, m_HelipadY{};
 
          bool m_GameOver{false};
 
-         std::optional<float> m_PrevShaping;
+         std::optional<double> m_PrevShaping;
 
         void destroy()  noexcept;
 

@@ -28,9 +28,8 @@ TEST_CASE("Testing Rendering Random") {
     auto s = env.reset();
     auto returns = 0.f;
     while (true) {
-        cv::Mat mat(s.size(1), s.size(2), CV_8UC3, s.flatten().data_ptr());
-        cv::resize(mat, mat, {128, 128}, cv::INTER_CUBIC);
-        cv::imshow("raw", mat);
+        cv::resize(s, s, {128, 128}, cv::INTER_CUBIC);
+        cv::imshow("raw", s);
 
         env.render();
         cv::waitKey(100);

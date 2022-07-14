@@ -13,17 +13,13 @@ namespace gym{
 
     public:
 
-        explicit CartPoleEnv(Kwargs const&);
+        explicit CartPoleEnv();
 
         void render() final;
 
         std::vector<double> reset() noexcept final;
 
         StepT step(ActionT const& action) noexcept final;
-
-        inline void seed(std::optional<uint64_t> seed) noexcept{
-            m_Device.seed(seed.value_or(std::chrono::high_resolution_clock::now().time_since_epoch().count()));
-        }
 
     private:
         std::unique_ptr<Viewer> m_Viewer;
@@ -47,8 +43,6 @@ namespace gym{
         Transform m_CartTransform, m_PoleTransform;
         FilledPolygon m_Pole, m_Cart, m_Axle;
         Line m_Track;
-
-        int timeStep=0;
     };
 }
 

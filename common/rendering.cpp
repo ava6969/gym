@@ -101,7 +101,6 @@ namespace gym{
     }
 
     void Viewer::setBounds(float left, float right, float bottom, float top) {
-//        std::lock_guard<std::mutex> lck(mtx);
         assert(right > left && top > bottom);
 
         auto scaleX = (float)m_Width / (right - left);
@@ -132,7 +131,10 @@ namespace gym{
 
         glfwSwapBuffers(m_Window);
 
-        glfwPollEvents();
+        {
+            std::lock_guard<std::mutex> lck(mtx);
+            glfwPollEvents();
+        }
 
         m_OneTimeGeoms.clear();
 
@@ -140,7 +142,7 @@ namespace gym{
     }
 
     Viewer::~Viewer() {
-//        std::lock_guard<std::mutex> lck(mtx);
+        std::lock_guard<std::mutex> lck(mtx);
         glfwTerminate();
         glfwDestroyWindow(m_Window);
         m_IsOpen = false;

@@ -18,31 +18,52 @@ namespace gym {
     CarRacing::~CarRacing()=default;
 
     CarRacing::CarRacing(bool hide, int verbose) :
-            contactListener_keepref(this),
+            contactListener_keepref(nullptr),
             hide_window(hide),
             fd_tile(std::array<std::array<float, 2>, 4>{std::array<float, 2>{0, 0}, {1, 0}, {1, -1}, {0 - 1}}) {
 
         BaseEnvT::seed(std::nullopt);
+        contactListener_keepref = std::make_unique<FrictionDetector>(this);
+
+        this->world = std::make_unique<b2World>(b2Vec2{0, 0.f});
+        world->SetContactListener(contactListener_keepref.get());
+
+        viewer = nullptr;
+
+        road.clear();
+        car.reset();
+
+        reward = {};
+        prev_reward = {};
         this->verbose = verbose;
+
         m_ActionSpace = makeBoxSpace<float>({-1, 0, 0}, {1, 1, 1}, 3);
         m_ObservationSpace = makeBoxSpace<uint8_t>(0, 255, {STATE_H, STATE_W, 3});
 
     }
 
+    void gym::CarRacing::destroy() {
+        if(road.empty())
+            return;
+        for(auto const& tile : road){
+            world->DestroyBody(tile->body);
+//            tile->resetUserData();
+//            tile.reset
+        }
+
+        road.clear();
+        car->destroy();
+    }
+
     cv::Mat CarRacing::reset() noexcept {
 
-        b2Vec2 gravity(0.0f, 0.0f);
-        world = std::make_unique<b2World>(gravity);
-        world->SetAllowSleeping(true);
-        world->SetContactListener(&contactListener_keepref);
-        road.clear();
+        destroy();
 
         reward = 0.0;
         prev_reward = 0.0;
         tileVisitedCount = 0;
         t = 0.0;
         road_poly.clear();
-        this->track = {};
 
         while (true) {
             auto success = createTrack();
@@ -52,7 +73,7 @@ namespace gym {
                 std::cout << "retry to generate track (normal if there are not many of this messages)\n";
         }
 
-        car = std::make_unique<box2d::Car>(world.get(), track[0][1], track[0][2], track[0][3]);
+        car = std::make_optional<box2d::Car>(world.get(), track[0][1], track[0][2], track[0][3]);
         step();
 
         return state;
@@ -100,12 +121,11 @@ namespace gym {
 
         constexpr auto CHECKPOINTS = 12;
 
-        std::array<std::array<float, 3>, CHECKPOINTS> checkpoints{};
+        std::array<std::array<double, 3>, CHECKPOINTS> checkpoints{};
         float c = 0;
         for (auto &ci: checkpoints) {
-            auto alpha =
-                    2 * M_PI * c / CHECKPOINTS + uniformRandom<float>(0, 2 * M_PI * 1 / CHECKPOINTS, 1, m_Device)[0];
-            auto rad = uniformRandom<float>(TRACK_RAD / 3, TRACK_RAD, 1, m_Device)[0];
+            auto alpha = 2 * M_PI * c / CHECKPOINTS + _np_random.uniform(0, 2 * M_PI * 1 / CHECKPOINTS);
+            auto rad = _np_random.uniform(TRACK_RAD / 3, TRACK_RAD);
             if (c == 0) {
                 alpha = 0;
                 rad = 1.5 * TRACK_RAD;
@@ -116,20 +136,21 @@ namespace gym {
                 rad = 1.5 * TRACK_RAD;
             }
 
-            ci = {static_cast<float>(alpha),
-                  static_cast<float>(rad * std::cos(alpha)),
-                  static_cast<float>(rad * std::sin(alpha))};
+            ci = {static_cast<double>(alpha),
+                  static_cast<double>(rad * std::cos(alpha)),
+                  static_cast<double>(rad * std::sin(alpha))};
             c++;
         }
 
         road.clear();
-        float x = 1.5 * TRACK_RAD, y = 0, beta = 0, laps = 0;
+        double x = 1.5 * TRACK_RAD, y = 0, beta = 0, laps = 0;
         int dest_i = 0;
 
-        decltype(track) ttrack;
+        this->track.clear();
+
         int no_Freeze = 2500;
         bool visited_other_side = false;
-        float dest_alpha, dest_x, dest_y;
+        double dest_alpha, dest_x, dest_y;
         while (true) {
 
             auto alpha = atan2(y, x);
@@ -159,19 +180,19 @@ namespace gym {
                     break;
                 }
                 alpha -= 2 * M_PI;
-            }
-            auto r1x = cos(beta);
-            auto r1y = sin(beta);
-            auto p1x = -r1y;
-            auto p1y = r1x;
-            auto dest_dx = dest_x - x;
-            auto dest_dy = dest_y - y;
-            auto proj = r1x * dest_dx + r1y * dest_dy;
+           }
+            double r1x = cos(beta);
+            double r1y = sin(beta);
+            double p1x = -r1y;
+            double p1y = r1x;
+            double dest_dx = dest_x - x;
+            double dest_dy = dest_y - y;
+            double proj = r1x * dest_dx + r1y * dest_dy;
             while (beta - alpha > 1.5 * M_PI)
                 beta -= 2 * M_PI;
             while (beta - alpha < -1.5 * M_PI)
                 beta += 2 * M_PI;
-            auto prev_beta = beta;
+            double prev_beta = beta;
             proj *= SCALE;
             if (proj > 0.3)
                 beta -= std::min<float>(TRACK_TURN_RATE, abs(0.001f * proj));
@@ -179,10 +200,10 @@ namespace gym {
                 beta += std::min<float>(TRACK_TURN_RATE, abs(0.001f * proj));
             x += p1x * TRACK_DETAIL_STEP;
             y += p1y * TRACK_DETAIL_STEP;
-            ttrack.push_back(std::vector<float>{static_cast<float>(alpha),
-                                                static_cast<float>(prev_beta * 0.5 + beta * 0.5),
-                                                static_cast<float>(x),
-                                                static_cast<float>(y)});
+            track.push_back(std::vector<double>{static_cast<double>(alpha),
+                                                static_cast<double>(prev_beta * 0.5 + beta * 0.5),
+                                                static_cast<double>(x),
+                                                static_cast<double>(y)});
             if (laps > 4)
                 break;
             no_Freeze -= 1;
@@ -191,13 +212,13 @@ namespace gym {
         }
 
         int i1 = -1, i2 = -1;
-        auto i = int(ttrack.size());
+        auto i = int(track.size());
         while (true) {
             i -= 1;
             if (i == 0) {
                 return false;
             }
-            auto pass_through_start = (ttrack[i][0] > start_alpha) and (ttrack[i - 1][0] <= start_alpha);
+            auto pass_through_start = (track[i][0] > start_alpha) and (track[i - 1][0] <= start_alpha);
             if (pass_through_start and i2 == -1)
                 i2 = i;
             else if (pass_through_start and i1 == -1) {
@@ -212,43 +233,47 @@ namespace gym {
         assert(i1 != -1);
         assert(i2 != -1);
 
-        ttrack = decltype(ttrack)(ttrack.begin() + i1, ttrack.begin() + i2 - 1);
-        auto N = ttrack.size();
+        track.assign(track.begin() + i1, track.begin() + i2 - 1);
+        auto N = track.size();
 
-        auto first_beta = ttrack[0][1];
+        auto first_beta = track[0][1];
         auto first_perp_x = cos(first_beta), first_perp_y = sin(first_beta);
         auto well_glued_together = sqrt(
-                square(first_perp_x * (ttrack[0][2] - ttrack[N - 1][2])) +
-                square(first_perp_x * (ttrack[0][2] - ttrack[N - 1][2])));
+                square(first_perp_x * (track[0][2] - track[N - 1][2])) +
+                square(first_perp_y * (track[0][3] - track[N - 1][3])));
 
         if (well_glued_together > TRACK_DETAIL_STEP)
             return false;
 
-        std::vector<bool> border(ttrack.size(), false);
-        for (int i = 0; i < ttrack.size(); i++) {
+        std::vector<bool> border(track.size(), false);
+
+        for (i = 0; i < track.size(); i++) {
             bool good = true;
-            float oneside = 0;
+            double oneside = 0;
             for (int neg = 0; neg < BORDER_MIN_COUNT; neg++) {
 
-                auto beta1 = at(ttrack, i - neg - 0).at(1);
-                auto beta2 = at(ttrack, i - neg - 1).at(1);
-                good &= abs(beta1 - beta2) > TRACK_TURN_RATE * 0.2;
-                oneside += sign(beta1 - beta2);
+                auto beta1 = at(track, i - neg - 0).at(1);
+                auto beta2 = at(track, i - neg - 1).at(1);
+                auto diff = beta1 - beta2;
+                good &= abs(diff) > TRACK_TURN_RATE * 0.2;
+                oneside += sign(diff);
             }
             good &= (abs(int(oneside)) == BORDER_MIN_COUNT);
             border[i] = good;
         }
 
-        for (int i = 0; i < ttrack.size(); i++) {
+        for (int j = 0; j < track.size(); j++) {
             for (int neg = 0; neg < BORDER_MIN_COUNT; neg++) {
-                border[i - neg] = border[i - neg] | border[i];
+                bool a = at( border, j - neg);
+                bool b = border.at(j);
+                set( border, j - neg, a | b);
             }
         }
 
-        for (int i = 0; i < ttrack.size(); i++) {
-            auto [alpha1, beta1, x1, y1] = std::tie(ttrack[i][0], ttrack[i][1], ttrack[i][2], ttrack[i][3]);
-            auto [alpha2, beta2, x2, y2] = std::tie(at(ttrack, i - 1)[0], at(ttrack, i - 1)[1], at(ttrack, i - 1)[2],
-                                                    at(ttrack, i - 1)[3]);
+        for (int i = 0; i < track.size(); i++) {
+            auto [alpha1, beta1, x1, y1] = std::tie(track[i][0], track[i][1], track[i][2], track[i][3]);
+            auto ttrack_i1 = at(track, i - 1);
+            auto [alpha2, beta2, x2, y2] = std::tie(ttrack_i1[0], ttrack_i1[1], ttrack_i1[2], ttrack_i1[3]);
             b2Vec2 road1_l = b2Vec2(x1 - TRACK_WIDTH * cos(beta1), y1 - TRACK_WIDTH * sin(beta1)),
                     road1_r = b2Vec2(x1 + TRACK_WIDTH * cos(beta1), y1 + TRACK_WIDTH * sin(beta1)),
                     road2_l = b2Vec2(x2 - TRACK_WIDTH * cos(beta2), y2 - TRACK_WIDTH * sin(beta2)),
@@ -257,16 +282,15 @@ namespace gym {
             std::vector<b2Vec2> vertices({road1_l, road1_r, road2_r, road2_l});
             fd_tile.vertices(vertices);
 
-            box2d::Tile _t = std::make_unique<box2d::TileBase>(
-                    CreateStaticBody(*this->world, fd_tile.def));
-            _t->userData();
+            auto _t = std::make_unique<box2d::TileBase>( CreateStaticBody(*this->world, fd_tile.def) );
             c = 0.01f * float(i % 3);
             _t->color = {ROAD_COLOR.r + c, ROAD_COLOR.g + c, ROAD_COLOR.b + c};
             _t->road_visited = false;
             _t->road_friction = 1.0;
             _t->body->GetFixtureList()->SetSensor(true);
+            _t->setUserData();
             road_poly.emplace_back(std::array<b2Vec2, 4>{road1_l, road1_r, road2_r, road2_l},
-                                   std::array<float, 3>{_t->color.vec4[0], _t->color.vec4[1], _t->color.vec4[2]});
+                                   std::array<double, 3>{_t->color.vec4[0], _t->color.vec4[1], _t->color.vec4[2]});
             road.emplace_back(std::move(_t));
             if (border[i]) {
                 auto side = sign(beta2 - beta1);
@@ -277,11 +301,10 @@ namespace gym {
                         b2_r = b2Vec2(x2 + side * (TRACK_WIDTH + BORDER) * cos(beta2),
                                       y2 + side * (TRACK_WIDTH + BORDER) * sin(beta2));
                 road_poly.emplace_back(std::array<b2Vec2, 4>{b1_l, b1_r, b2_r, b2_l},
-                                       i % 2 == 0 ? std::array<float, 3>{1, 1, 1} : std::array<float, 3>{1, 0, 0});
+                                       i % 2 == 0 ? std::array<double, 3>{1, 1, 1} : std::array<double, 3>{1, 0, 0});
             }
         }
 
-        this->track = std::move(ttrack);
         return true;
     }
 
@@ -394,7 +417,11 @@ namespace gym {
         cv::Mat arr;
         auto win = viewer->win();
         glfwMakeContextCurrent(win);
-        glfwPollEvents();
+
+        if constexpr(m == RenderMode::Human){
+            glfwPollEvents();
+        }
+
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         int VP_W = 0, VP_H = 0;

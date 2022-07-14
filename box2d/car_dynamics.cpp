@@ -74,9 +74,10 @@ namespace gym::box2d {
             rjd.upperAngle = 0.4;
 
             w->joint = dynamic_cast<b2RevoluteJoint *>(world->CreateJoint(&rjd));
-            w->userData();
-            m_drawList.push_back(w.get());
             m_Wheels.template emplace_back( std::move(w) );
+            m_Wheels.back()->setUserData();
+            m_drawList.push_back(m_Wheels.back().get());
+
         });
 
         m_drawList.push_back(m_Hull.get());
@@ -241,6 +242,17 @@ namespace gym::box2d {
         while ( particles.size() > 30)
             particles.pop_front();
         return particles.back();
+    }
+
+    void Car::destroy() {
+        m_World->DestroyBody(m_Hull->body);
+        m_Hull.reset();
+        for( auto const& w : m_Wheels){
+            m_World->DestroyBody(w->body);
+//            w->resetUserData();
+//            w.reset
+        }
+        m_Wheels.clear();
     }
 
 

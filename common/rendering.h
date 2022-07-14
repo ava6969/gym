@@ -51,8 +51,11 @@ namespace gym{
         sf::Vector2f m_Translation{},m_Scale{1, 1};
         float m_Rotation{0};
 
+
         Transform(sf::Vector2f translation):m_Translation(translation){}
         Transform()=default;
+        Transform(Transform&&) noexcept = default;
+        Transform(Transform const&) = default;
         Transform& operator=(Transform&& geom) noexcept;
 
         void enable();

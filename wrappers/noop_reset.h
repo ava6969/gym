@@ -44,8 +44,7 @@ namespace gym {
             StepT resp;
             resp.observation = this->m_Env->reset();
 
-            int noops = m_OverrideNumNoops.value_or(
-                    std::uniform_int_distribution<int>(1, m_NoopMax + 1)(this->m_Device));
+            int noops = m_OverrideNumNoops.value_or(this->_np_random.randint<int32_t>(1, m_NoopMax + 1 ));
 
             assert(noops > 0);
             // toTensor = np.zeros(0) ignore since observation is replaced anyway

@@ -25,8 +25,8 @@ namespace gym{
         TileBase* tile{nullptr};
         WheelBase* obj{nullptr};
 
-        auto u1 = _contact->GetFixtureA()->GetBody()->GetUserData().pointer;
-        auto u2 = _contact->GetFixtureB()->GetBody()->GetUserData().pointer;
+        auto u1 = reinterpret_cast<DrawableBodyBase*>(_contact->GetFixtureA()->GetBody()->GetUserData().pointer);
+        auto u2 = reinterpret_cast<DrawableBodyBase*>(_contact->GetFixtureB()->GetBody()->GetUserData().pointer);
 
         auto complete = [this](TileBase* t, WheelBase* w, bool begin){
             t->color.vec4[0] = CarRacing::ROAD_COLOR.r;
@@ -48,22 +48,24 @@ namespace gym{
         };
 
         TileBase* temp_tile;
-        if( (temp_tile = reinterpret_cast<TileBase*>(u1)) ){
+        if( (temp_tile = dynamic_cast<TileBase*>(u1)) ){
 
             tile = temp_tile;
-            obj = reinterpret_cast<WheelBase*>(u2);
+            obj = dynamic_cast<WheelBase*>(u2);
 
             if(not obj)
                 return;
 
-        }else  if( (temp_tile = reinterpret_cast<TileBase*>(u2)) ){
+        }
+        if( (temp_tile = dynamic_cast<TileBase*>(u2)) ){
 
             tile = temp_tile;
-            obj = reinterpret_cast<WheelBase*>(u1);
+            obj = dynamic_cast<WheelBase*>(u1);
 
             if(not obj)
                 return;
-        }else{
+        }
+        if (not tile) {
             return;
         }
 

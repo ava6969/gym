@@ -29,6 +29,11 @@ if(x.size() == y.size()){ \
 std::vector<float> result(x.size()); \
     std::transform(x.begin(), x.end(), result.begin(), [y](auto x1){ return x1 op y;}); \
     return result;\
+}                                                                                                                                           \
+ static std::vector<double> operator op (std::vector<double> const& x, float y){ \
+std::vector<double> result(x.size()); \
+    std::transform(x.begin(), x.end(), result.begin(), [y](auto x1){ return x1 op y;}); \
+    return result;\
 }
 
 #define __SINGLE_GYM_VECTOR_ARITHMETIC__(op)     static std::vector<float> operator op (std::vector<float> const& x){ \

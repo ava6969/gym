@@ -41,7 +41,7 @@ namespace gym::box2d {
 
         explicit TileBase(b2Body* body): DrawableBodyBase(body){}
 
-        void userData(){
+        void setUserData() override{
             body->GetUserData().pointer = reinterpret_cast<uintptr_t>(this);
         }
     };
@@ -56,7 +56,7 @@ namespace gym::box2d {
         std::unordered_map<std::uintptr_t , TileBase*> tiles{};
 
         explicit WheelBase(b2Body* body): DrawableBodyBase(body){}
-        void userData(){
+        void setUserData() override{
             body->GetUserData().pointer = reinterpret_cast<uintptr_t>(this);
         }
         inline void add(TileBase* t){
@@ -93,6 +93,7 @@ namespace gym::box2d {
         [[nodiscard]] inline float hullAngularVelocity() const { return m_Hull->body->GetAngularVelocity();  }
         [[nodiscard]] inline float hullAngle() const { return m_Hull->body->GetAngle();  }
         [[nodiscard]] inline auto* wheels(int idx) const { return m_Wheels.at(idx).get(); }
+        void destroy();
 
     private:
         b2World* m_World{};

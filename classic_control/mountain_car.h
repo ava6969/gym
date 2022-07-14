@@ -26,14 +26,15 @@ namespace gym {
     class MountainCarEnv : public Env< std::vector<double>, int> {
     private:
         // Constants
-        const float MIN_POS = -1.2;
-        const float MAX_POS = 0.6;
-        const float MAX_VEL = 0.07;
-        const float GOAL_POS = 0.5;
+        static constexpr float MIN_POS = -1.2;
+        static constexpr float MAX_POS = 0.6;
+        static constexpr float MAX_VEL = 0.07;
+        static constexpr float GOAL_POS = 0.5;
+        static constexpr float FORCE = 0.001;
+        static constexpr float GRAVITY = 0.0025;
 
         // Environment variables
-         double m_CarPos{};
-         double m_CarVel{};
+        std::vector<double> m_State{};
 
         // Viewer state
         std::unique_ptr<Viewer> m_Viewer;
@@ -45,12 +46,11 @@ namespace gym {
         Color m_TrackColor;
         PolyLine m_TrackGeom;
 
-        // Returns true if goal has been reached.
-        inline bool goal_achieved() const noexcept { return m_CarPos >= GOAL_POS; }
+        float goal_velocity;
 
     public:
 
-        MountainCarEnv();
+        explicit MountainCarEnv(int goal_velocity=0);
 
         StepT step(ActionT const& action)  noexcept final;
 

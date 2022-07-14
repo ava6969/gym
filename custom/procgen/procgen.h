@@ -74,6 +74,11 @@ namespace gym {
             paint_vel_info=false;
             std::string distribution_mode="hard";
             int distribution_mode_enum=0;
+
+            Option()=default;
+            explicit Option(std::string const& name):env_name( name ) {}
+            inline Option& game( std::string const& game) {env_name = game; return *this; }
+            inline Option& resourceRoot( std::string const& _resource_root) {resource_root = _resource_root; return *this; }
         };
 
         explicit BaseProcgenEnv(Option const& opt);

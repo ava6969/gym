@@ -73,10 +73,11 @@ namespace gym{
     template<bool image>
     void AtariEnv<image>::seed(std::optional<uint64_t> const& _seed) noexcept{
 
-        Env< ObsT<image>, int >::seed(_seed);
+        long seed1;
+        std::tie(this->_np_random, seed1) = np_random(_seed);
+        auto seed2 = static_cast<int32_t >( hash_seed( seed1 + 1 ) % ( long(std::pow(2, 31) ) ) );
 
-        m_Ale->setInt("random_seed",
-                      std::uniform_int_distribution<int32_t>(0, std::numeric_limits<int32_t>::max())(this->m_Device) );
+        m_Ale->setInt("random_seed", seed2 );
 
         std::filesystem::path home = std::getenv("HOME");
         auto fs = (home / "atari_roms" / m_Game).concat(".bin");

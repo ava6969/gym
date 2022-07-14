@@ -65,12 +65,12 @@ void gym::MemoryEnv::genGrid(int width, int height) {
             })
     };
 
-    auto start_room_obj = sample< true >(1, keyBallMaker, m_Device );
+    auto start_room_obj = rand( keyBallMaker );
     grid.set(1, floor_div(height, 2) - 1, start_room_obj.second(mg::Color::Green));
 
     std::vector< std::vector<T> > cont{ballKeyMaker, keyBallMaker};
 
-    auto other_objs = sample< true >(1, cont, m_Device );
+    auto other_objs = rand(cont);
     auto pos0 = mg::Point{hallway_end+1, floor_div(height, 2) - 2},
          pos1 = mg::Point{hallway_end+1, floor_div(height, 2) + 2};
 

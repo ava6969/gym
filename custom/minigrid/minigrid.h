@@ -99,8 +99,40 @@ protected:
                               bool rand_dir=true,
                               int max_tries=std::numeric_limits<int>::max());
 
+        template<class T>
+        T rand( T low, T high);
+
+        inline bool rand_bool(){
+            return this->_np_random.randint(0, 2) == 0;
+        }
+
+        inline auto rand_color(){
+            std::vector iterable( std::begin(mg::COLOR_NAMES), std::end(mg::COLOR_NAMES) );
+            return iterable[ _np_random.randint<int>(0, static_cast<int>(iterable.size())) ];
+        }
+
+        template<class T>
+        T rand(std::vector<T> const& iterable){
+                return iterable[_np_random.randint<int>(0, static_cast<int>(iterable.size()))];
+        }
+
         template<class T, class OutT=T, class ... Args>
-        OutT rand(Args ...);
+        std::vector<T> rand_subset(std::vector<T> a, int num_elem){
+            try{
+                std::vector<T> out;
+                out.reserve(num_elem);
+                while ( a.size() < num_elem){
+                    auto elem = rand(a);
+                    std::erase(a, elem);
+                    out.push_back(elem);
+                }
+                return out;
+            } catch (std::out_of_range const & err) {
+                std::stringstream ss;
+                ss << num_elem << " > size of list --> " << a.size() << "\n";
+                throw std::out_of_range(ss.str());
+            }
+        }
 
         void fillDictionary(){
             auto sz = missionWordDictionary.size();

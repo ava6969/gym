@@ -16,6 +16,7 @@ class CarRacing : public Env<cv::Mat, std::vector<float>>{
 
 public:
         explicit CarRacing(bool hide=false, int verbose=1);
+        CarRacing(CarRacing &&)=default;
 
         ObservationT reset() noexcept override;
 
@@ -61,22 +62,22 @@ public:
         bool hide_window{false};
 
         float reward{}, prev_reward{}, start_alpha{};
-        std::vector< std::vector<float> > track;
+        std::vector< std::vector<double> > track;
         int tileVisitedCount{};
         int verbose{};
-        FrictionDetector contactListener_keepref;
+        std::unique_ptr<class FrictionDetector> contactListener_keepref;
         box2d::util::PolygonFixtureDef<4> fd_tile;
         std::unique_ptr<Viewer> viewer{nullptr};
         Transform transform;
 
-        std::vector< std::pair< std::array<b2Vec2, 4>, std::array<float, 3> > > road_poly;
+        std::vector< std::pair< std::array<b2Vec2, 4>, std::array<double, 3> > > road_poly;
         float t= 0;
         cv::Mat state;
         std::unique_ptr<class FTLabel> score_label;
         std::shared_ptr<class GLFont> _font;
 
         std::vector<box2d::Tile> road;
-        std::unique_ptr<box2d::Car> car;
+        std::optional<box2d::Car> car;
 
         std::unique_ptr<b2World> world;
 
@@ -89,6 +90,8 @@ public:
         float norm(std::array<float, 2> const& x);
 
         template<RenderMode m> cv::Mat _render();
+
+        void destroy();
 
     };
 

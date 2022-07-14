@@ -82,6 +82,9 @@ namespace gym {
             bool is_test{false};
             std::optional<int> seed;
             int width{96}, height{72};
+
+            Option()=default;
+            explicit Option(std::string const& game):game(game){}
         };
 
         explicit DMLabEnv(Option args);

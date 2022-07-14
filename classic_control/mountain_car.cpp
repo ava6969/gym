@@ -7,46 +7,52 @@
 
 namespace gym{
 
-    gym::MountainCarEnv::MountainCarEnv() {
+    gym::MountainCarEnv::MountainCarEnv(int goal_velocity):goal_velocity(goal_velocity) {
         // Define observation and action m_Space
-        m_ObservationSpace = makeBoxSpace<float>(2);
+        m_ObservationSpace = makeBoxSpace<float>({MIN_POS, -MAX_VEL}, {MAX_POS, MAX_VEL}, 2);
         m_ActionSpace = makeDiscreteSpace(3);
+        MountainCarEnv::seed(std::nullopt);
 
-        reset();
     }
 
     MountainCarEnv::StepT gym::MountainCarEnv::step(const ActionT &action)  noexcept{
         // Update velocity
-        m_CarVel += (action - 1) * 0.001 + cos(3 * m_CarPos) * -0.0025;
-        if (m_CarVel > MAX_VEL)
-            m_CarVel = MAX_VEL;
-        if (m_CarVel < -MAX_VEL)
-            m_CarVel = -MAX_VEL;
+        auto[position, velocity] = std::tie(m_State[0], m_State[1]);
+        velocity += float(action - 1) * FORCE + cos(3 * position) * -GRAVITY;
+        velocity = std::clamp<double>(velocity, -MAX_VEL, MAX_VEL);
 
         // Update car position
-        m_CarPos += m_CarVel;
-        if (m_CarPos > MAX_POS)
-            m_CarPos = MAX_POS;
-        if (m_CarPos < MIN_POS)
-            m_CarPos = MIN_POS;
+        position += velocity;
+        position = std::clamp<double>(position, MIN_POS, MAX_POS);
 
-        if (m_CarPos == MIN_POS && m_CarVel < 0)
-            m_CarVel = 0;
+        if (position == MIN_POS && velocity < 0)
+            velocity = 0;
 
-        return {{m_CarPos, m_CarVel} , -1.f, goal_achieved(), {}};
+        auto done = bool(position >= GOAL_POS and velocity >= goal_velocity);
+        constexpr auto reward = -1.0;
+
+        m_State = {position, velocity};
+        return {m_State , reward, done, {}};
     }
 
     MountainCarEnv::ObservationT MountainCarEnv::reset()  noexcept {
-        m_CarPos = -0.5;
-        m_CarVel = 0.0;
-        return {m_CarPos, m_CarVel};
+        m_State = {_np_random.uniform(-0.6, -0.4), 0};
+        return m_State;
     }
 
-    void gym::MountainCarEnv::render() {
+    void gym::MountainCarEnv::render(){
+
+        constexpr float screen_width = 600, screen_height = 400,
+        world_width=MAX_POS-MIN_POS,
+        scale = screen_width/world_width,
+        carwidth=40,
+        carheight=20;
+
         // If a viewer does not exist, create it
         if (!m_Viewer) {
-            m_Viewer = std::make_unique<Viewer>(400, 400, "MountainCar");
-            m_Viewer->setBounds(0, 400, 0, 400);
+            m_Viewer = std::make_unique<Viewer>(screen_width, screen_height, "MountainCar");
+//            m_Viewer->setBounds(0, 400, 0, 400);
+
 
             // Create rendering geometry
             m_CarColor = Color {0.0, 0.0, 0.0};
@@ -76,8 +82,9 @@ namespace gym{
         }
 
         // Render car
-        m_CarTransform.m_Translation = std::array<float, 2>{static_cast<float>(((m_CarPos - MIN_POS) / (MAX_POS - MIN_POS)) * 400),
-                                                            static_cast<float>((sin(3 * m_CarPos) + 1) * 100 + 200)};
+        auto pos = m_State[0];
+        m_CarTransform.m_Translation = std::array<float, 2>{static_cast<float>(((pos - MIN_POS) / (MAX_POS - MIN_POS)) * 400),
+                                                            static_cast<float>((sin(3 * pos) + 1) * 100 + 200)};
 
         m_Viewer->render();
     }

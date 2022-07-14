@@ -11,6 +11,7 @@
 #include "optional"
 #include "any"
 #include "mutex"
+#include "random/seeding.h"
 #ifdef WIN32
 #define or ||
 #define and &&
@@ -58,13 +59,7 @@ namespace gym{
         virtual std::string info() { return "Gym Env"; }
 
         virtual void seed(std::optional<uint64_t> const& _seed) noexcept {
-            if (_seed)
-                m_Device.seed(*_seed);
-            else{
-                std::random_device r;                                       // 1
-                std::seed_seq seed{r(), r()}; // 2
-                m_Device = std::mt19937(seed);
-            }
+            std::tie(_np_random, std::ignore) = np_random(_seed);
         }
 
         virtual StepT step(ActionT const& action) noexcept = 0;
@@ -80,7 +75,7 @@ namespace gym{
 
     protected:
         std::shared_ptr<Space> m_ActionSpace, m_ObservationSpace;
-        std::mt19937 m_Device;
+        np::RandomState _np_random;
         Kwargs m_Args{};
     };
 

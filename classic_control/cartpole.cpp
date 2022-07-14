@@ -6,7 +6,7 @@
 
 namespace gym{
 
-    CartPoleEnv::CartPoleEnv(Kwargs const&){
+    CartPoleEnv::CartPoleEnv(){
         auto&& high = {m_XThreshold * 2,
                        std::numeric_limits<float>::max(),
                        m_ThetaThresholdRadians * 2,
@@ -17,22 +17,14 @@ namespace gym{
     }
 
     CartPoleEnv::ObservationT CartPoleEnv::reset()  noexcept{
-
-       std::uniform_real_distribution<float> dist(-0.05f, 0.05f);
-
-       m_State = {dist(m_Device) ,
-                  dist(m_Device) ,
-                  dist(m_Device) ,
-                  dist(m_Device)};
-
+       m_State = _np_random.uniform(-0.05, 0.05, 4);
        m_StepsBeyondDone = std::nullopt;
-        timeStep = 0;
         return m_State;
     }
 
     CartPoleEnv::StepT CartPoleEnv::step( CartPoleEnv::ActionT const& action)  noexcept{
 
-        auto[x, xDot, theta, thetaDot] = std::make_tuple(m_State[0], m_State[1],m_State[2],m_State[3]);
+        auto[x, xDot, theta, thetaDot] = std::tie(m_State[0], m_State[1],m_State[2],m_State[3]);
 
         auto force = (action == 1) ? m_ForceMag : -m_ForceMag;
 
@@ -61,8 +53,7 @@ namespace gym{
 
         m_State = {x, xDot, theta, thetaDot};
 
-        auto done = bool( timeStep == 500
-                or x < -m_XThreshold
+        auto done = bool( x < -m_XThreshold
                 or x > m_XThreshold
                 or theta < -m_ThetaThresholdRadians
                 or theta > m_ThetaThresholdRadians);
@@ -80,10 +71,9 @@ namespace gym{
                              "should always call 'reset()' once you receive 'done = "
                              "True' -- any further steps are undefined behavior.\n";
             }
-            m_StepsBeyondDone.value() += 1;
+            *m_StepsBeyondDone += 1;
             reward = 0.0;
         }
-        timeStep++;
         return {m_State, reward, done, {}};
     }
 

@@ -33,6 +33,7 @@ find_package(OpenSSL REQUIRED)
 find_package(Torch REQUIRED)
 find_package(Boost COMPONENTS filesystem thread system date_time chrono regex   REQUIRED)
 find_package(Threads REQUIRED)
+find_package(NumCpp CONFIG REQUIRED)
 
 add_subdirectory(third_party)
 set(DEPENDENCIES
@@ -43,6 +44,7 @@ set(DEPENDENCIES
 		glfw ${GLEW_LIBRARIES} freetype
 		box2d::box2d
 		glm::glm
+		NumCpp::NumCpp
 		${OpenCV_LIBS}
 		${TORCH_LIBRARIES}
 		${LIBVIZDOOM}
@@ -53,18 +55,24 @@ set(DEPENDENCIES
 
 add_library(gym STATIC "" common/tensor_adapter.cpp custom/dm_lab/lab.cpp)
 target_link_libraries(gym PRIVATE ${DEPENDENCIES})
-target_include_directories(gym PRIVATE . ${GLEW_INCLUDE_DIRS}  ${OPENGL_INCLUDE_DIR} ${OpenCV_INCLUDE_DIRS} ${TORCH_INCLUDE_DIRS})
+target_include_directories(gym PRIVATE . ${GLEW_INCLUDE_DIRS}
+		${OPENGL_INCLUDE_DIR}
+		../thirdparty/tinyndarray
+		${OpenCV_INCLUDE_DIRS}
+		${TORCH_INCLUDE_DIRS})
 target_compile_options(gym PRIVATE -fvisibility=hidden)
 set_target_properties(gym PROPERTIES CXX_VISIBILITY_PRESET "hidden" CUDA_VISIBILITY_PRESET "hidden")
+target_compile_definitions(gym PUBLIC NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION )
 
 add_subdirectory(common)
 add_subdirectory(spaces)
 add_subdirectory(classic_control)
 add_subdirectory(wrappers)
 add_subdirectory(custom)
-
+add_subdirectory(random)
 add_subdirectory(atari)
 add_subdirectory(box2d)
+add_subdirectory(tools)
 
 if(${BUILD_TEST})
 	find_package(Catch2 CONFIG REQUIRED)

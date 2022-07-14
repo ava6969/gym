@@ -21,10 +21,7 @@ namespace gym {
             default:
                 t = torch::kUInt8;
         }
-
-        return (c == 1 && n == 1) ?
-        torch::from_blob(x.data, {r*c*n}, {t}).clone() :
-        torch::from_blob(x.data, {r, c, n}, {t}).clone();
+        return (r == 1 or c == n ? torch::from_blob(x.data, {r*c*n}, {t}) : torch::from_blob(x.data, {r, c, n}, {t})).clone();
     }
 
 }

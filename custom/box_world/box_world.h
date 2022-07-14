@@ -126,6 +126,7 @@ class BoxWorld : public Env< cv::Mat, int> {
         int m_NumDistractor;
         int m_DistractorLength;
         bool verbose;
+        std::mt19937 m_Device;
 
         // Generates world from a seed.
         virtual std::tuple<cv::Mat, mg::Point, std::vector<BColor>, std::vector<BColor>>  world_gen();
@@ -159,6 +160,11 @@ class BoxWorld : public Env< cv::Mat, int> {
         cv::Mat reset() noexcept final;
 
         void render() final;
+
+        inline void seed(const std::optional<uint64_t> &_seed) noexcept override{
+            auto real_seed = _seed.value_or( random() );
+            m_Device.seed(real_seed);
+        }
     };
 }
 

@@ -1,6 +1,6 @@
-add_executable(GymTest  box_world.cpp py_atari_env.cpp procgen.cpp dm_lab.cpp)
+add_executable(GymTest  box_world.cpp py_atari_env.cpp procgen.cpp box2d.cpp dm_lab.cpp random.cpp classic_control.cpp)
 target_link_libraries(GymTest PRIVATE ${DEPENDENCIES} gym)
-target_include_directories(GymTest PRIVATE ..)
+target_include_directories(GymTest PRIVATE .. ../../thirdparty/tinyndarray)
 
 if(${ADD_PROCGEN})
     # include qt5

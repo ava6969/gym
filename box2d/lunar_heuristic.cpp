@@ -44,10 +44,11 @@ typename gym::LunarLandarEnv<cont>::ActionT heuristic(gym::LunarLandarEnv<cont>*
 }
 
 template<bool cont>
-void singlePlayer( gym::LunarLandarEnv<cont>& env){
+void singlePlayer( gym::LunarLandarEnv<cont>& env, int seed=1){
 
     auto total_reward = 0.f;
     auto steps = 0;
+    env.seed(seed);
     auto s = env.reset();
     std::vector<float> rews;
     while(true){
@@ -75,13 +76,49 @@ void singlePlayer( gym::LunarLandarEnv<cont>& env){
     }
 }
 
-template<bool cont>
+void singlePlayerCar( gym::CarRacing& env, int seed=1){
+
+    auto total_reward = 0.f;
+    auto steps = 0;
+    env.seed(seed);
+
+    for(int i =0; i < 5; i++){
+        auto s = env.reset();
+        std::vector<float> rews;
+        while(true){
+
+            auto a = env.actionSpace()->sample<std::vector<float>>();
+            auto resp = env.step(a);
+
+            total_reward += resp.reward;
+            rews.push_back(resp.reward);
+
+            env.render();
+
+            steps++;
+
+            if(resp.done)
+            {
+                break;
+            }
+            s = resp.observation;
+        }
+    }
+
+}
+
+
+template<class EnvT, bool cont=false>
 void multiplayer(int players){
 
     std::vector<std::future<void>> ftrs(players);
-    std::vector< gym::LunarLandarEnv<cont> > envs(players);
-    std::transform(envs.begin(), envs.end(), ftrs.begin(), [](auto& env){
-        return std::async(singlePlayer<cont>, std::ref(env));
+    std::vector< EnvT > envs(players);
+    int i = 1;
+    std::transform(envs.begin(), envs.end(), ftrs.begin(), [i](auto& env) mutable {
+        if constexpr( std::same_as<EnvT, gym::CarRacing>)
+            return std::async(singlePlayerCar, std::ref(env), i++);
+        else
+            return std::async(singlePlayer<cont>, std::ref(env), i++);
     });
 
     for(auto& ftr: ftrs)
@@ -89,7 +126,7 @@ void multiplayer(int players){
 }
 
 int main(){
-    gym::LunarLandarEnv<false> discrete_env, cont_env;
+//    gym::LunarLandarEnv<false> discrete_env, cont_env;
 
 //    std::cout << "Running Single Continuous Player\n";
 //    singlePlayer(cont_env);
@@ -101,6 +138,9 @@ int main(){
 //    std::cout << "Running Multiplayer Continuous Player\n";
 //    multiplayer<true>(3);
 //
-    std::cout << "Running Multiplayer Discrete Player\n";
-    multiplayer<false>(4);
+//    std::cout << "Running Multiplayer Discrete Player\n";
+//    multiplayer<false>(4);
+
+    std::cout << "Running Multiplayer CarRacing Player\n";
+    multiplayer<gym::CarRacing>(16);
 }

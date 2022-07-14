@@ -135,41 +135,15 @@ namespace gym {
     }
 
     template<> int MiniGridEnv::rand<int>(int low, int high){
-        std::uniform_int_distribution dist(low, high);
-        return dist(m_Device);
+        return this->_np_random.randint(low, high);
     }
 
     template<> float MiniGridEnv::rand<float>(float low, float high){
-        std::uniform_real_distribution dist(low, high);
-        return dist(m_Device);
+        return static_cast<float>(this->_np_random.uniform(low, high));
     }
 
-    template<> mg::Point MiniGridEnv::rand< mg::Point >(int xLow, int xHigh, int yLow, int yHigh){
-        return { rand<int>(xLow, xHigh), rand<int>(yLow, yHigh)};
-    }
-
-    template<> bool MiniGridEnv::rand<bool>(){
-        return rand<int>(0, 1) == 0;
-    }
-
-    template<> int MiniGridEnv::rand<std::vector<int>>( std::vector<int> const& iterable ){
-        return uniformRandom<1>(iterable, m_Device);
-    }
-
-    template<> float MiniGridEnv::rand<std::vector<float>>( std::vector<float> const& iterable ){
-        return uniformRandom<1>(iterable, m_Device);
-    }
-
-    template<> const char* MiniGridEnv::rand< Color >( ){
-        return uniformRandom<1>( std::vector( std::begin(mg::COLOR_NAMES), std::end(mg::COLOR_NAMES)), m_Device);
-    }
-
-    template<> std::vector<float> MiniGridEnv::rand<std::vector<float>>( std::vector<float> const& iterable, int n_elems ){
-        return sample<false>(n_elems, iterable, m_Device);
-    }
-
-    template<> std::vector<int> MiniGridEnv::rand<std::vector<float>>( std::vector<int> const& iterable, int n_elems ){
-        return sample<false>(n_elems, iterable, m_Device);
+    template<> mg::Point MiniGridEnv::rand< mg::Point >( mg::Point x, mg::Point y){
+        return { rand<int>(x.x, x.y), rand<int>(y.x, y.y)};
     }
 
     mg::Point MiniGridEnv::placeObj(WorldObj::Ptr const& obj,
