@@ -6,7 +6,6 @@
 #include "optional"
 
 
-
 class RunParallel {
 
 public:

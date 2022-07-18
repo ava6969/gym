@@ -51,6 +51,7 @@ set(DEPENDENCIES
 		${CMAKE_THREAD_LIBS_INIT}
 		OpenSSL::SSL OpenSSL::Crypto
 		glfont
+		s2clientprotocol
 		)
 
 add_library(gym STATIC "" common/tensor_adapter.cpp custom/dm_lab/lab.cpp)

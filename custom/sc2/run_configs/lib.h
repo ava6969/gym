@@ -14,12 +14,6 @@ static argparse::ArgumentParser flags;
 
 namespace sc2{
 
-    struct SC2LaunchError: std::exception{
-        std::string msg;
-        SC2LaunchError( std::string const& _msg):msg(_msg){}
-        const char* what() const noexcept override { return msg.c_str(); }
-    };
-
     struct Version{
         std::string game_version;
         int build_version;
@@ -128,6 +122,8 @@ namespace sc2{
         };
 
         RunConfig(Option _opt) : opt(_opt), version(get_version(opt.version)) {}
+
+        virtual void start( std::unordered_map<std::string, std::any> const& kwargs) = 0;
 
         static std::shared_ptr<RunConfig> get(std::optional<std::string> const & _version = std::nullopt);
 
