@@ -94,13 +94,14 @@ namespace gym::space{
 
         virtual ~Space()=default;
 
-        inline auto type() const{
+        [[nodiscard]] inline auto type() const{
             return m_Shape.m_Type;
         }
 
-        inline auto size() const{
+        [[nodiscard]] inline auto size() const{
             return m_Shape.m_Axis;
         }
+
     };
 }
 
