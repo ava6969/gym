@@ -8,6 +8,8 @@
 #include "utils.h"
 #include "spaces/space.h"
 #include "variant"
+#include "torch/torch.h"
+
 
 namespace gym{
 
@@ -15,7 +17,7 @@ namespace gym{
     class StackedObservation {
     public:
 
-        template<class T=torch::Tensor>
+        template<class T=at::Tensor>
         using infer = std::conditional_t<dict, std::unordered_map<std::string, T>, T>;
 
         StackedObservation(int numEnvs,
@@ -93,8 +95,8 @@ namespace gym{
             }
         }
 
-        inline void stack(torch::Tensor& y, torch::Tensor const& x, int size, bool channel_first){
-            using S = torch::indexing::Slice;
+        inline void stack(at::Tensor& y, at::Tensor const& x, int size, bool channel_first){
+            using S = at::indexing::Slice;
             y = channel_first ? y.index_put_({S(), S(-size), "..."}, x) : y.index_put_({"...", S(-size)}, x);
         }
 
@@ -103,7 +105,7 @@ namespace gym{
                 plot("last stack", stackedObs[nStack-1], 84, 84, false);
         }
 
-        inline void reset(torch::Tensor & y, torch::Tensor const& x, int stackDim, bool channel_first){
+        inline void reset(at::Tensor & y, at::Tensor const& x, int stackDim, bool channel_first){
             y.index_put_({"..."}, 0);
             stack(y, x, x.size( stackDim ), channel_first);
         }
@@ -123,9 +125,9 @@ namespace gym{
             return stackedObs;
         }
 
-        void update(torch::Tensor & y, torch::Tensor const& x, int stackDim, bool channel_first){
+        void update(at::Tensor & y, at::Tensor const& x, int stackDim, bool channel_first){
             auto stackAxSize = x.size( stackDim );
-            y = torch::roll(y, -stackAxSize, stackDim);
+            y = at::roll(y, -stackAxSize, stackDim);
             stack(y, x, stackDim, channel_first);
         }
 
@@ -148,7 +150,7 @@ namespace gym{
         int nStack{};
         infer<bool> channelFirst{};
         infer<int> stackDimension{};
-        infer<torch::Tensor> stackedObs{};
+        infer<at::Tensor> stackedObs{};
         infer<int> repeatAxis{};
         std::set<std::string> excludes;
 

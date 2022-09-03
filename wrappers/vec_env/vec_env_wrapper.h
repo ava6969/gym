@@ -30,7 +30,7 @@ namespace gym {
             return venv->reset();
         }
 
-       inline void stepAsync( torch::Tensor const& actions) noexcept override{
+       inline void stepAsync( at::Tensor const& actions) noexcept override{
             this->venv->stepAsync( actions );
         }
 
@@ -46,7 +46,7 @@ namespace gym {
 
         virtual typename VecEnv<dict>::ObservationT reset(int index) { return venv->reset(index); }
 
-        inline typename VecEnv<dict>::StepT step(int index, torch::Tensor const& action) noexcept{
+        inline typename VecEnv<dict>::StepT step(int index, at::Tensor const& action) noexcept{
             return venv->step(index, action);
         }
 

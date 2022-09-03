@@ -6,7 +6,8 @@
 #define GYM_BASE_H
 
 #include "env.h"
-#include "torch/torch.h"
+#include <ATen/Tensor.h>
+//#include "torch/torch.h"
 
 namespace gym{
 
@@ -15,17 +16,17 @@ namespace gym{
      * Will I ever need to bundle env with different observation Type
      * */
 
-    using TensorDict = std::unordered_map<std::string, torch::Tensor>;
+    using TensorDict = std::unordered_map<std::string, at::Tensor>;
     template<typename ObservationType>
     struct VecEnvStepReturn{
         ObservationType observation{};
-        torch::Tensor reward{};
-        torch::Tensor done{};
+        at::Tensor reward{};
+        at::Tensor done{};
         std::vector<AnyMap> info;
     };
 
     template<bool dict>
-    using infer_type = std::conditional_t<dict, TensorDict, torch::Tensor>;
+    using infer_type = std::conditional_t<dict, TensorDict, at::Tensor>;
 
     template<bool dict>
     class VecEnv{
@@ -33,7 +34,7 @@ namespace gym{
     public:
 
         using ObservationT = infer_type<dict>;
-        using ActionT = torch::Tensor;
+        using ActionT = at::Tensor;
         using StepT = VecEnvStepReturn< ObservationT >;
 
         VecEnv()=default;
@@ -53,11 +54,11 @@ namespace gym{
 
 //        virtual std::vector<cv::Mat> GetImages() { return {}; };
 
-        virtual void stepAsync( torch::Tensor const& actions) noexcept = 0;
+        virtual void stepAsync( at::Tensor const& actions) noexcept = 0;
 
         virtual StepT stepWait() noexcept = 0;
 
-        inline StepT step(torch::Tensor const& actions) noexcept{
+        inline StepT step(at::Tensor const& actions) noexcept{
             stepAsync( actions );
             return stepWait();
         }
@@ -67,7 +68,7 @@ namespace gym{
 
         virtual ObservationT reset(int index) = 0;
 
-        virtual StepT step(int index, torch::Tensor const& action) noexcept = 0;
+        virtual StepT step(int index, at::Tensor const& action) noexcept = 0;
 
         virtual void render() const = 0;
 

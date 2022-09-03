@@ -5,6 +5,7 @@
 #pragma once
 
 #include "wrappers/vec_env/vec_env_wrapper.h"
+#include "torch/torch.h"
 
 namespace gym {
 
