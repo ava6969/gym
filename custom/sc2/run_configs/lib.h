@@ -2,6 +2,8 @@
 //
 // Created by dewe on 7/14/22.
 //
+#include <utility>
+
 #include "filesystem"
 #include "optional"
 #include "unordered_map"
@@ -16,30 +18,32 @@ namespace sc2{
 
     struct Version{
         std::string game_version;
-        int build_version;
+        int build_version{};
         std::optional<std::string> data_version, binary;
 
         Version()=default;
-        Version(std::string const& gV, int bV,
-                std::optional<std::string> const& dV,
-                std::optional<std::string> const& binary):game_version(gV),
-                                                          build_version(bV), data_version(dV),
-                                                          binary(binary){}
+        Version(std::string  gV, int bV,
+                std::optional<std::string>  dV,
+                std::optional<std::string>  binary):game_version(std::move(gV)),
+                                                          build_version(bV), data_version(std::move(dV)),
+                                                          binary(std::move(binary)){}
         bool operator==(Version const& other) const= default;
         friend std::ostream& operator<<(std::ostream& os, Version const& v){
             os << "Version(game_version=" << v.game_version << ", build_version=" << v.build_version << ", data_version="
             << v.data_version.value_or("None") << ", binary=" << v.binary.value_or("None") << " );\n";
+            return os;
         }
     };
 
-    std::unordered_map<std::string, Version> version_dict( std::vector<Version> const& versions ){
+    static  std::unordered_map<std::string, Version> version_dict( std::vector<Version> const& versions ){
         std::unordered_map<std::string, Version> dict;
         for(auto const& v: versions)
             dict.emplace(v.game_version, v);
         return dict;
     }
 
-#define None std::nullopt
+
+    const auto None = std::nullopt;
 
     const auto VERSIONS = version_dict({
                                                Version("3.13.0", 52910, "8D9FEF2E1CF7C6C9CBE4FBCA830DDE1C", None),
@@ -115,73 +119,53 @@ namespace sc2{
 
     class RunConfig {
 
+        inline static std::vector< std::array<std::string, 2> > KNOWN_GL_LIBS{
+                {"-eglpath", "libEGL.so"},
+                {"-eglpath", "libEGL.so.1"},
+                {"-osmesapath", "libOSMesa.so"},
+                {"-osmesapath", "libOSMesa.so.8"},  // Ubuntu 16.04
+                {"-osmesapath", "libOSMesa.so.6"},  // Ubuntu 14.04
+        };
+
     public:
         struct Option {
-            std::filesystem::path replay_dir, data_dir, tmp_dir, cwd;
+            std::filesystem::path replay_dir, data_dir;
+            std::optional<std::filesystem::path> tmp_dir, cwd;
             std::string version;
         };
 
-        RunConfig(Option _opt) : opt(_opt), version(get_version(opt.version)) {}
+        explicit RunConfig(std::string _version);
 
-        virtual void start( std::unordered_map<std::string, std::any> const& kwargs) = 0;
+        struct std::unique_ptr<class StarcraftProcess>  start(
+                bool want_rgb=true, std::vector<unsigned short> const& extra_ports={},
+                    std::vector<std::string> extra_args={});
 
-        static std::shared_ptr<RunConfig> get(std::optional<std::string> const & _version = std::nullopt);
+        inline auto tmpDir() const { return opt.tmp_dir; }
+        inline auto dataDir() const { return opt.data_dir; }
+
+        std::string map_data(std::string const& map_name, std::optional<int> const& players);
 
     private:
         Option opt;
         Version version;
+        std::string m_execName;
 
-        std::vector<std::string> all_subclasses( );
-        std::optional<int> priority() const { return std::nullopt; }
+        [[nodiscard]] virtual inline std::string name() const { return "Linux"; }
 
-        virtual inline std::string name() const { return "RunConfig"; }
-
-        std::ofstream map_data(std::string const& map_name, std::optional<std::vector<class Player>> const& players);
-
-        inline std::shared_ptr<RunConfig> make(Version const& v) const{
-            auto opt_clone = opt;
-            opt_clone.version = v.game_version;
-            return std::make_shared<RunConfig>(opt_clone);
+        [[nodiscard]] static inline RunConfig make(Version const& v) {
+            return RunConfig(v.game_version);
         }
 
-        inline std::shared_ptr<RunConfig> make(std::optional<std::string> const& v) const{
-            auto opt_clone = opt;
-            opt_clone.version = v.value_or("");
-            return std::make_shared<RunConfig>(opt_clone);
+        [[nodiscard]] static inline RunConfig make(std::optional<std::string> const& v) {
+            return RunConfig(v.value_or(""));
         }
 
-        auto get_versions(std::optional<std::string> const &containing = std::nullopt) const {
-            if (containing and not VERSIONS.contains(containing.value())) {
-                std::stringstream ss;
-                ss << "Unknown game version: " << containing.value() << ". Known versions: ";
-                for (auto const &[k, _]: VERSIONS)
-                    ss << k << " ";
-                ss << ".\n";
-                throw std::runtime_error(ss.str());
-            }
-            return VERSIONS;
-        }
+        std::unordered_map<std::basic_string<char>, Version>
+        get_versions(std::optional<std::string> const &containing = std::nullopt);
 
-        Version get_version(std::string game_version) const {
-            if (std::ranges::count(game_version, '.') == 1) {
-                game_version += ".0";
-            }
-            auto versions = get_versions(game_version);
-            return versions[game_version];
-        }
+        [[nodiscard]] Version get_version(std::string game_version);
 
-        Version get_version(Version const &game_version) {
-            if (game_version.game_version.empty()) {
-                std::stringstream ss;
-                ss << "Version " << game_version << " supplied without a game version.";
-                throw std::runtime_error(ss.str());
-            }
-            if (game_version.data_version and game_version.binary and game_version.build_version) {
-                return game_version;
-            }
-
-            return {};
-        }
+        Version get_version(Version const &game_version);
     };
 
 }

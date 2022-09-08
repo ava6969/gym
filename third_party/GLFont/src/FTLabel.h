@@ -4,7 +4,7 @@
 #include "ft2build.h"
 #include FT_FREETYPE_H
 #include "glm/glm.hpp"
-
+#include "string"
 #include "GLFont.h"
 
 #include <memory> // for use of shared_ptr

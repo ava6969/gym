@@ -19,7 +19,7 @@ local colors = require 'common.colors'
 local game = require 'dmlab.system.game'
 local image = require 'dmlab.system.image'
 
-local SINGLE_BOT_SKIN_TEXTURE = 'models/players/crash_color/skin_base.tga'
+local SINGLE_BOT_SKIN_TEXTURE = 'models/m_players/crash_color/skin_base.tga'
 local SATURATION = 1.0
 local VALUE = 1.0
 

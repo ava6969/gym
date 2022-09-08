@@ -9,6 +9,7 @@ else()
     find_package(Qt5 COMPONENTS Core Widgets Gui REQUIRED)
     target_link_libraries(${PROJECT_NAME} PRIVATE Qt5::Core Qt5::Widgets Qt5::Gui)
 
+
     add_subdirectory(procgen)
 #    add_subdirectory(vizdoom)
     add_subdirectory(dm_lab)

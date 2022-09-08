@@ -20,7 +20,7 @@ local image = require 'dmlab.system.image'
 
 local RED_TEXTURES = {
     'models/flags/r_flag.tga',
-    'models/players/crash/redskin.tga',
+    'models/m_players/crash/redskin.tga',
     'icons/iconh_red',
     'icons/iconf_red1',
     'icons/iconf_red2',
@@ -29,7 +29,7 @@ local RED_TEXTURES = {
 
 local BLUE_TEXTURES = {
     'models/flags/b_flag.tga',
-    'models/players/crash/blueskin.tga',
+    'models/m_players/crash/blueskin.tga',
     'icons/iconh_blue',
     'icons/iconf_blu1',
     'icons/iconf_blu2',

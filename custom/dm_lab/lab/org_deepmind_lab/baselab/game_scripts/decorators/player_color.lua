@@ -22,7 +22,7 @@ local colors = require 'common.colors'
 
 local function decorator(api)
   assert(api.playerColor, 'Must add playerColor api function')
-  local players = {}
+  local m_players = {}
   local botColors = {}
   local currentMap
   local characterSkinData
@@ -55,7 +55,7 @@ local function decorator(api)
   function api:nextMap()
     currentMap = nextMap(self)
     if currentMap ~= '' then
-      players = {}
+      m_players = {}
       botColors = {}
     end
     return currentMap
@@ -76,7 +76,7 @@ local function decorator(api)
   function api:newClientInfo(playerId, playerName, playerModel)
     local _, _, id = string.find(playerModel, 'crash_color/skin(%d*)')
     botColors[id or ''] = api.playerColor(self, playerId, playerName)
-    players[playerId] = {name = playerName, modelId = id or ''}
+    m_players[playerId] = {name = playerName, modelId = id or ''}
     if newClientInfo then
         newClientInfo(self, playerId, playerName, playerModel)
     end
@@ -85,7 +85,7 @@ local function decorator(api)
   local modifyTexture = api.modifyTexture
   function api:modifyTexture(name, texture)
     local _, _, id = string.find(name,
-      'models/players/crash_color/skin_base(%d*).tga')
+      'models/m_players/crash_color/skin_base(%d*).tga')
     if id then
       if id == '' then
         baseTexture = texture:clone()
@@ -100,11 +100,11 @@ local function decorator(api)
   local mapLoaded = api.mapLoaded
   function api:mapLoaded()
     if currentMap == '' then
-      for playerId, player in pairs(players) do
+      for playerId, player in pairs(m_players) do
         botColors[player.modelId] = api.playerColor(self, playerId, player.name)
         local texture = baseTexture:clone()
         updateSkin(texture, botColors[player.modelId])
-        game:updateTexture('models/players/crash_color/skin_base' ..
+        game:updateTexture('models/m_players/crash_color/skin_base' ..
                            player.modelId .. '.tga', texture)
       end
     end

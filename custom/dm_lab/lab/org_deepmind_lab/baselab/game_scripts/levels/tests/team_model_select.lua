@@ -106,7 +106,7 @@ end
 local modifyTexture = api.modifyTexture
 function api:modifyTexture(name, texture)
   local _, _, id = string.find(name,
-    'models/players/crash_color/skin_base(%d*).tga')
+    'models/m_players/crash_color/skin_base(%d*).tga')
   if id then
     if id == '' then
       id = 1

@@ -8,10 +8,10 @@
 #include "variant"
 #include "optional"
 #include "filesystem"
-#include "custom/sc2/registry.h"
-#include "custom/sc2/run_parallel.h"
-#include "custom/sc2/env/enums.h"
-#include "custom/sc2/lib/features.h"
+#include "../registry.h"
+#include "../run_parallel.h"
+#include "enums.h"
+#include "../lib/features.h"
 #include "../lib/sc_process.h"
 #include "../lib/remote_controller.h"
 
@@ -27,17 +27,30 @@ namespace sc2{
 
     struct PlayerImpl{
         std::vector<sc_pb::Race> race;
+        explicit PlayerImpl(std::vector<sc_pb::Race> _race):race( std::move(_race) ){}
+        virtual std::string type() = 0;
+        virtual ~PlayerImpl()=default;
     };
+
     using PlayerPtr = std::unique_ptr<PlayerImpl>;
 
     struct AgentImpl : PlayerImpl{
         std::string name;
+        explicit AgentImpl(std::vector<sc_pb::Race> _race, std::string _name=""):
+        PlayerImpl( std::move(_race)), name( std::move(_name) ) {}
+        std::string type() override { return "agent"; }
     };
     using Agent = std::unique_ptr<AgentImpl>;
 
     struct BotImpl : PlayerImpl{
-        std::vector<sc_pb::Difficulty> difficulty;
-        std::vector<sc_pb::BuildItem> build;
+        sc_pb::Difficulty difficulty;
+        std::vector<sc_pb::AIBuild> build;
+
+        BotImpl(std::vector<sc_pb::Race> _race,
+                  sc_pb::Difficulty const& _difficulty,
+                  std::vector<sc_pb::AIBuild> _build):
+        PlayerImpl( std::move(_race)), difficulty( _difficulty ), build( std::move(_build) ) {}
+        std::string type() override { return "bot"; }
     };
     using Bot = std::unique_ptr<BotImpl>;
 
@@ -47,14 +60,12 @@ namespace sc2{
 
     using InterfaceFormat = std::variant<sc_pb::InterfaceOptions, AgentInterfaceFormat>;
 
-    template<class ObsT, class ActionT>
-    class SC2Env : public Base<ObsT, ActionT> {
+    class SC2Env  {
 
     public:
         struct Option{
             std::optional<std::vector<std::string>> map_name{std::nullopt};
             bool battle_net_map{false};
-            std::vector<Player> players{};
             std::optional< std::vector< InterfaceFormat > >
             agent_interface_format{std::nullopt};
             float discount{1.};
@@ -74,25 +85,29 @@ namespace sc2{
             std::optional<std::string> version{std::nullopt};
         };
 
+        std::vector<PlayerPtr> m_players;
     public:
-        SC2Env(Option const& );
-
+        SC2Env(Option ,  std::vector<PlayerPtr>  );
         static sc_pb::InterfaceOptions get_interface(InterfaceFormat& interface_format,
                                                      bool require_raw);
 
     private:
         int num_agents;
+        std::string m_map_name;
         Option opt;
         std::optional<int> last_step_time{std::nullopt};
-        std::shared_ptr<RunConfig>  runConfig;
-        RunParallel parallel;
+        std::optional<RunConfig>  m_runConfig;
+        std::unique_ptr<RunParallel> m_parallel;
         std::optional<std::string> game_info, requested_races;
         std::vector<std::optional< std::function<int()> > > action_delay_fns;
         std::vector< InterfaceFormat > interface_formats;
         std::vector< sc_pb::InterfaceOptions > interface_options;
         std::vector<unsigned short> ports;
-        std::vector<StarcraftProcess> sc2_procs;
-        std::vector<RemoteController> controllers;
+        std::vector< std::unique_ptr<StarcraftProcess> > sc2_procs;
+        std::vector<RemoteController*> controllers;
+        std::vector<std::shared_ptr<Map>> m_maps;
+        std::optional<int> m_defaultStepMul, m_defaultScoreMultiplier, m_defaultEpisodeLength, m_episodeLength;
+
 
         void launch_game();
         void create_join();

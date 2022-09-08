@@ -1,26 +1,97 @@
 //
 // Created by dewe on 7/16/22.
 //
-
+#include <algorithm>
+#include <ranges>
 #include <numeric>
 #include <tabulate/table.hpp>
 #include "stopwatch.h"
 
 namespace sc2{
 
-    StopWatchContext::StopWatchContext(StopWatch &stopwatch,
-                                       const std::string &name):sw(stopwatch) {
-        sw.push(name);
+
+    std::ostream & operator<<(std::ostream& os, Stat const& s){
+        if(s.num == 0)
+            os << "num=0";
+        else{
+            os << "sum: " << s.sum
+               << ", avg: " << s.avg()
+               << ", dev: " << s.dev()
+               << ", min: " << s.min
+               << ", max: " << s.max
+               << ", num: " << s.num;
+        }
+        return os;
+    }
+
+    Stat Stat::parse(std::string const& s){
+        if( s == "num=0"){
+            return {};
+        }
+
+        std::vector<float> parts;
+        auto result = split(s, ", ");
+        std::ranges::transform(result, std::back_inserter(parts), [](auto const& p){
+            return std::stof(split(p, ":")[1]);
+        });
+
+        return Stat{parts};
+    }
+
+    void Stat::merge(Stat const &other) {
+        num += other.num;
+        min = std::min(min, other.min);
+        max = std::max(max, other.max);
+        sum += other.sum;
+        sum_sq += other.sum_sq;
+    }
+
+    Stat::Stat(float summation, float average,
+               float standard_deviation, float minimum, float maximum, float number) {
+        if (number > 0) {
+            num = number;
+            min = minimum;
+            max = maximum;
+            sum = summation;
+            sum_sq = number * (std::pow(standard_deviation, 2) + std::pow(average, 2));
+        }
+    }
+
+    StopWatchContext::StopWatchContext(StopWatch* stopwatch,
+                                       const std::string &name):m_sw(stopwatch) {
+        stopwatch->push(name);
     }
 
     void StopWatchContext::exit(){
-        sw.add( sw.pop(),
-                std::chrono::duration<float>( std::chrono::high_resolution_clock::now() - start ).count() );
+        if(m_sw)
+            m_sw->add( m_sw->pop(), elapsed(*start) );
+        else
+            throw std::runtime_error("StopWatchContext::exit(): m_sw pointer has been released\n");
     }
 
-    StopWatch::StopWatch(bool enabled, bool trace){
+    TracingStopWatchContext::TracingStopWatchContext(StopWatch* stopwatch,
+                                                     const std::string &name): StopWatchContext(stopwatch, name) {
+    }
 
-        if(trace){
+    void TracingStopWatchContext::enter() {
+        StopWatchContext::enter();
+        if(m_sw)
+            log(LOG_STREAM(">>> " << m_sw->cur_stack() ) );
+        else
+            throw std::runtime_error("TracingStopWatchContext::enter(): m_sw pointer has been released\n");
+    }
+
+    void TracingStopWatchContext::exit() {
+        if(m_sw){
+            log(LOG_STREAM("<<< " << m_sw->cur_stack() << ": " << elapsed(*start) << "f secs."));
+            StopWatchContext::exit();
+        }
+        else
+            throw std::runtime_error("TracingStopWatchContext::exit(): m_sw pointer has been released\n");
+    }
+
+    StopWatch::StopWatch(bool enabled, bool _trace){
+        if(_trace){
             this->trace();
         }else if( enabled ){
             this->enable();
@@ -29,11 +100,12 @@ namespace sc2{
         }
     }
 
-    StopWatch* StopWatch::instance(){
-        if(inst)
-            return inst.get();
-        inst.reset(new StopWatch(false));
-        return inst.get();
+    std::string StopWatch::cur_stack( ){
+        std::stringstream ss;
+        std::ranges::copy(local, std::ostream_iterator<std::string>(ss, "."));
+        auto result = ss.str();
+        result.pop_back();
+        return result;
     }
 
     StopWatch StopWatch::parse(std::string const& s){
@@ -70,7 +142,7 @@ namespace sc2{
         tabulate::Table table;
         table.add_row({"", "% total", "sum", "avg", "dev", "min", "max", "num"});
         for(auto const& [k, v] : _times){
-            auto percent = 100* v.Sum() / ( std::max<float>(total, 1) );
+            auto percent = 100* v.Sum() / ( total == 0 ? 1 : total) ;
             if( percent > threshold){
                 table.add_row({
                     k, std::to_string(percent), std::to_string(v.Sum()), std::to_string(v.avg()),
@@ -79,24 +151,6 @@ namespace sc2{
             }
         }
         return table.str();
-    }
-
-
-    TracingStopWatchContext::TracingStopWatchContext(StopWatch &stopwatch,
-                                                     const std::string &name): StopWatchContext(stopwatch, name) {
-    }
-
-    void TracingStopWatchContext::enter() {
-        StopWatchContext::enter();
-        log( ">>> " +  sw.cur_stack() );
-    }
-
-    void TracingStopWatchContext::exit() {
-        auto tm = std::chrono::duration<float>( std::chrono::high_resolution_clock::now() - start ).count();
-        std::stringstream ss;
-        ss << "<<< " <<  sw.cur_stack() << ": " << tm << "f secs.";
-        log(ss.str());
-        StopWatchContext::exit();
     }
 
 }

@@ -4,25 +4,25 @@
 
 #include "algorithm"
 #include "sc2_env.h"
+#include "random"
 #include "glog/logging.h"
-#include "../lib/portspicker.h"
 
 
 namespace sc2{
 
-    template<class ObsT, class ActionT>
-    SC2Env<ObsT, ActionT>::SC2Env(Option const& _opt):
-    opt(std::move(_opt)){
+    SC2Env::SC2Env(Option  _opt, std::vector<PlayerPtr> players ):
+    opt(std::move(_opt)),
+    m_players( std::move(players) ){
 
-        if(opt.players.empty()){
+        if(m_players.empty()){
             throw std::runtime_error("You must specify the list of players.");
         }
 
-        auto num_players = opt.players.size();
-        num_agents = std::accumulate(std::begin(opt.players),
-                                     std::end(opt.players),
-                                     0.0, [](auto const& p, int accum){
-            return accum + (dynamic_cast<AgentImpl*>(p.get()) != nullptr ? 1 : 0);
+        auto num_players = m_players.size();
+        num_agents = std::accumulate(std::begin(m_players),
+                                     std::end(m_players),
+                                     0, [](int accum, auto const& p){
+            return accum + int(p->type() == "agent") ;
         });
 
         if( not ((1 <= num_players) and (num_players <= 2)) or not num_agents ){
@@ -32,24 +32,22 @@ namespace sc2{
         if (not opt.map_name){
             throw std::runtime_error("Missing a map name.");
         }
-        for( auto const& name: opt.map_name){
-            opt.maps.push_back( Maps.at(name) );
+        for( auto const& name: *opt.map_name){
+            m_maps.push_back( Maps.at(name) );
         }
 
         std::vector<int> flat_num_players{};
-        for( auto m: opt.maps){
-            flat_num_players.push_back(m->players.value());
+        for( auto const& m: m_maps){
+            flat_num_players.push_back(*m->players());
         }
 
         auto min_players = std::ranges::min(flat_num_players);
         auto max_players = std::ranges::max(flat_num_players);
 
         if(opt.battle_net_map){
-            for( auto const& m : opt.maps){
-                if(not m->battle_net){
-                    throw std::runtime_error(m->name() + " isn't known on Battle.net");
-                }
-            }
+            auto containsBattleMap = [](auto const& m) { return m->battleNet().has_value(); };
+            if( auto it = std::ranges::find_if(m_maps, containsBattleMap); it != m_maps.end())
+                throw std::runtime_error( (*it)->name() + " isn't known on Battle.net");
         }
 
         if( max_players == 1){
@@ -67,24 +65,26 @@ namespace sc2{
             throw std::runtime_error("Missing replay_dir");
         }
 
-        runConfig = RunConfig::get(opt.version);
+        m_runConfig = RunConfig{opt.version.value_or("latest")};
+        m_parallel = std::make_unique<RunParallel>();
 
-        if( opt.agent_interface_format ){
+        if( not opt.agent_interface_format ){
             throw std::runtime_error("Please specify agent_interface_format.");
         }
 
         if( opt.agent_interface_format->size() == 1 ){
-            opt.agent_interface_format->resize( opt.agent_interface_format[0], num_agents);
+            opt.agent_interface_format->resize( num_agents, opt.agent_interface_format->at(0));
         }
 
-        if( opt.agent_interface_format.size() != num_agents){
+        if( opt.agent_interface_format->size() != num_agents){
             throw std::runtime_error(
                     "The number of entries in agent_interface_format should "
                     "correspond 1-1 with the number of agents.");
         }
 
         for( auto const& aif : *opt.agent_interface_format){
-            if ( auto aif_f = std::get<AgentInterfaceFormat>(aif) ){
+            if ( std::holds_alternative<AgentInterfaceFormat>(aif) ){
+                auto aif_f = std::get<AgentInterfaceFormat>(aif);
                 action_delay_fns.emplace_back(aif_f.opt.action_delay_fn);
             }else{
                 action_delay_fns.emplace_back(std::nullopt);
@@ -102,9 +102,9 @@ namespace sc2{
         finalize(opt.visualize);
     }
 
-    template<class ObsT, class ActionT>
-    sc_pb::InterfaceOptions SC2Env<ObsT, ActionT>::get_interface(InterfaceFormat& interface_format,
-                                                                 bool require_raw){
+
+    sc_pb::InterfaceOptions SC2Env::get_interface(InterfaceFormat& interface_format,
+                                                  bool require_raw){
 
         if ( std::holds_alternative<sc_pb::InterfaceOptions>(interface_format) ){
             auto interface_options = std::get<sc_pb::InterfaceOptions>(interface_format);
@@ -131,8 +131,8 @@ namespace sc2{
 
         if ( aif.has_feature_dimensions() ){
             interface.mutable_feature_layer()->set_width( aif.camera_width_world_units() );
-            aif.feature_dimensions()->screen( interface.feature_layer().resolution() );
-            aif.feature_dimensions()->minimap( interface.feature_layer().minimap_resolution() );
+            aif.feature_dimensions()->screen().assign_to( interface.mutable_feature_layer()->mutable_resolution() );
+            aif.feature_dimensions()->minimap().assign_to( interface.mutable_feature_layer()->mutable_minimap_resolution() );
             interface.mutable_feature_layer()->set_crop_to_playable_area( aif.crop_to_playable_area() );
             interface.mutable_feature_layer()->set_allow_cheating_layers( aif.allow_cheating_layers() );
         }
@@ -144,31 +144,30 @@ namespace sc2{
         return interface;
     }
 
-    template<class ObsT, class ActionT>
-    void SC2Env<ObsT, ActionT>::launch_game(){
+    void SC2Env::launch_game(){
         if( num_agents > 1){
-            ports = pick_unused_ports(num_agents*2);
+            //ports = pick_unused_ports(num_agents*2);
+            throw std::runtime_error("MultiPlayer not implemented yet");
         }else{
-            ports.clear();
+            ports = {};
         }
 
         std::ranges::transform(interface_options, std::back_inserter(sc2_procs),
                                [this](auto const& interface){
-            return runConfig->start(ports, interface.has_render());
+            return m_runConfig->start(interface.has_render(), ports);
         });
 
         std::ranges::transform(sc2_procs, std::back_inserter(controllers), [](auto const& p){
-            return p.controller();
+            return &p->controller();
         });
 
         if(opt.battle_net_map){
-            auto available_maps = controllers[0].available_maps();
-            auto available_maps_set = std::unordered_set(available_maps.begin(),
-                                                         available_maps.end() );
+            auto available_maps = controllers[0]->available_maps();
             std::vector<std::string> unavailable;
-            for(auto const& m : opt.maps){
-                if( not available_maps_set.contains( m.battle_net ) ){
-                    unavailable.emplace_back(m.name());
+
+            for(auto const& m : m_maps){
+                if( std::ranges::find(available_maps, *m->battleNet()) == available_maps.end() ){
+                    unavailable.push_back(m->name());
                 }
             }
 
@@ -181,13 +180,66 @@ namespace sc2{
         }
     }
 
-    template<class ObsT, class ActionT>
-    void SC2Env<ObsT, ActionT>::create_join(){
+    void SC2Env::create_join(){
+        auto choice = [](auto&& cont){
+            using T = std::remove_reference_t<decltype(cont)>;
+            typename T::value_type _res;
+            std::ranges::sample(cont, &_res, 1, std::mt19937{std::random_device{}()});
+            return _res;
+        };
+
+        std::shared_ptr<Map> map = choice(m_maps);
+
+        m_map_name = map->name();
+        opt.step_mul = std::max(1, m_defaultStepMul.value_or(map->stepMul()));
+        opt.score_multiplier = m_defaultStepMul.value_or(map->scoreMultiplier());
+        m_episodeLength = m_defaultEpisodeLength.value_or(map->gameStepsPerEpisode());
+
+        if(m_episodeLength <= 0 or m_episodeLength > MAX_STEP_COUNT)
+            m_episodeLength = MAX_STEP_COUNT;
+
+        SC2APIProtocol::Request req;
+        auto create = req.mutable_create_game();
+        create->set_disable_fog(opt.disable_fog);
+        create->set_realtime(opt.realtime);
+
+        if(opt.battle_net_map){
+            create->set_battlenet_map_name(*map->battleNet());
+        }else{
+            create->mutable_local_map()->set_map_data(map->path()->string());
+            auto map_data = map->data(m_runConfig.value());
+            if(num_agents == 1){
+                create->mutable_local_map()->set_map_data(map_data);
+            }else{
+                for(auto const& c: controllers){
+//                    c.saveMap(map->path(), map_data);
+                }
+            }
+        }
+
+        if(opt.random_seed){
+            create->set_random_seed(*opt.random_seed);
+        }
+
+        for(auto const& p : m_players){
+            if(p->type() == "agent"){
+                create->add_player_setup()->set_type(SC2APIProtocol::Participant);
+            }else{
+                auto bot = dynamic_cast<BotImpl*>(p.get());
+                auto player = create->add_player_setup();
+                player->set_type(SC2APIProtocol::Computer);
+                player->set_difficulty(bot->difficulty);
+                player->set_ai_build( choice(bot->build) );
+                player->set_race( choice(bot->race) );
+            }
+        }
+
+        controllers[0]->createGame(req);
+
 
     };
 
-    template<class ObsT, class ActionT>
-    void SC2Env<ObsT, ActionT>::finalize(bool visualize){
+    void SC2Env::finalize(bool visualize){
 
     };
 

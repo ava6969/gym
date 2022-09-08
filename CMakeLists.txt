@@ -6,12 +6,11 @@ set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 set(CMAKE_VISIBILITY_INLINES_HIDDEN YES)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  ${TORCH_CXX_FLAGS} -ffat-lto-objects -fPIC ")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
-
+set( CMAKE_CXX_STANDARD  20)
 project(gym)
 
 set(THIRD_PARTY ${CMAKE_CURRENT_LIST_DIR}/third_party)
 set(Boost_USE_STATIC_LIBS   ON)
-set(CMAKE_CXX_STANDARD 20)
 set(BUILD_TEST ON)
 
 option(ADD_BOX2D ON)
@@ -34,8 +33,13 @@ find_package(Torch REQUIRED)
 find_package(Boost COMPONENTS filesystem thread system date_time chrono regex   REQUIRED)
 find_package(Threads REQUIRED)
 find_package(NumCpp CONFIG REQUIRED)
+find_package(cpprestsdk REQUIRED)
 
 add_subdirectory(third_party)
+
+file(GLOB SC2_Lib $ENV{HOME}/StarCraftII/Libs/*.so.6)
+message("starcraft lib ${SC2_Lib}")
+
 set(DEPENDENCIES
 		${Boost_LIBRARIES}
 		${ALE_LIB}
@@ -51,19 +55,12 @@ set(DEPENDENCIES
 		${CMAKE_THREAD_LIBS_INIT}
 		OpenSSL::SSL OpenSSL::Crypto
 		glfont
-		s2clientprotocol
+		sc2protocol
+		cpprestsdk::cpprest
+#		${SC2_Lib}
 		)
 
 add_library(gym STATIC "" common/tensor_adapter.cpp custom/dm_lab/lab.cpp)
-target_link_libraries(gym PRIVATE ${DEPENDENCIES})
-target_include_directories(gym PRIVATE . ${GLEW_INCLUDE_DIRS}
-		${OPENGL_INCLUDE_DIR}
-		../thirdparty/tinyndarray
-		${OpenCV_INCLUDE_DIRS}
-		${TORCH_INCLUDE_DIRS})
-target_compile_options(gym PRIVATE -fvisibility=hidden)
-set_target_properties(gym PROPERTIES CXX_VISIBILITY_PRESET "hidden" CUDA_VISIBILITY_PRESET "hidden")
-target_compile_definitions(gym PUBLIC NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION )
 
 add_subdirectory(common)
 add_subdirectory(spaces)
@@ -74,6 +71,18 @@ add_subdirectory(random)
 add_subdirectory(atari)
 add_subdirectory(box2d)
 add_subdirectory(tools)
+
+target_link_libraries(gym PRIVATE ${DEPENDENCIES})
+target_include_directories(gym PRIVATE . ${GLEW_INCLUDE_DIRS}
+		${Protobuf_INCLUDE_DIRS}
+		custom/sc2
+		${OPENGL_INCLUDE_DIR}
+		../thirdparty/tinyndarray
+		${OpenCV_INCLUDE_DIRS}
+		${TORCH_INCLUDE_DIRS})
+target_compile_options(gym PRIVATE -fvisibility=hidden)
+set_target_properties(gym PROPERTIES CXX_VISIBILITY_PRESET "hidden" CUDA_VISIBILITY_PRESET "hidden")
+target_compile_definitions(gym PUBLIC NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION)
 
 if(${BUILD_TEST})
 	find_package(Catch2 CONFIG REQUIRED)

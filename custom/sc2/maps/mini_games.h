@@ -11,10 +11,10 @@ namespace sc2{
         MiniGame(){
             directory = "mini_games";
             download = "https://github.com/deepmind/pysc2#get-the-maps";
-            players = 1;
+            m_players = 1;
             score_index = 0;
             game_steps_per_episode = 0;
-            step_mul = 8;
+            m_step_mul = 8;
         }
     };
 

@@ -2,7 +2,7 @@
 // Created by dewe on 7/14/22.
 //
 
-#inc
+
 #include "custom/sc2/registry.h"
 #include "lib.h"
 
@@ -33,10 +33,10 @@ namespace sc2{
         return subs;
     }
 
-    std::vector<std::string> Map::data( class RunConfig* run_config) const {
+    std::string Map::data( RunConfig& run_config) const {
         try{
-            return run_config->map_data(path(), players);
-        } catch (std::ios_base::failure const& exp) {
+            return run_config.map_data(path()->string(), m_players);
+        } catch (std::exception const& exp) {
             if (download){
                 std::cerr << "Error reading map " << name() << " from: " << exp.what() << "\n";
                 std::cerr << "Download the map from: " << download.value() << "\n";
@@ -47,9 +47,9 @@ namespace sc2{
 
     std::unordered_map< std::string, std::shared_ptr<Map>> Map::getMaps( ){
         std::unordered_map< std::string, std::shared_ptr<Map>> maps;
-        for( auto const& mp_name : __subclasses__.at("Map") ){
-            auto mp = Maps.at(mp_name);
-            if ( mp->filename or mp->battle_net){
+        for( auto const& mp_name : map::__subclasses__.at("Map") ){
+            const auto& mp = Maps.at(mp_name);
+            if ( mp->filename or mp->m_battle_net){
                 auto map_name = mp->name();
                 if ( maps.contains(map_name)){
                     throw DuplicateMapError("Duplicate map found: " + map_name);

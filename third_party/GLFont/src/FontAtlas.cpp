@@ -1,5 +1,5 @@
 #include "FontAtlas.h"
-
+#include "string"
 #include <algorithm>
 
 FontAtlas::FontAtlas(FT_Face face, int pixelSize) :

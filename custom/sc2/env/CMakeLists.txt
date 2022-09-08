@@ -1,0 +1,1 @@
+target_sources(gym PRIVATE sc2_env.cpp environment.cpp)

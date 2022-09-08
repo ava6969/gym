@@ -24,7 +24,7 @@ inventory.GADGETS = {
     RAPID = 3,      -- Rapid fire gadget.
     SPRAY = 4,      -- Powerful, slow, inaccurate gadget
     BOUNCE_ORB = 5, -- Area damage with delay. Bounces unpredictably.
-    ORB = 6,        -- Area damage gadget. (Knocks players)
+    ORB = 6,        -- Area damage gadget. (Knocks m_players)
     BEAM = 7,       -- Accurate and very rapid fire beam.
     DISC = 8,       -- Powerful but long period between firing.
     RIPPLE = 9,     -- Rapid-fire gadget with small area damage.
@@ -185,22 +185,22 @@ function View:eyePos()
   return {x, y, z + self._loadOut.height}
 end
 
--- Returns players velocity in world units.
+-- Returns m_players velocity in world units.
 function View:velocity()
   return self._loadOut.velocity
 end
 
--- Returns players view direction in Euler angles degrees.
+-- Returns m_players view direction in Euler angles degrees.
 function View:eyeAngles()
   return self._loadOut.angles
 end
 
--- Returns players id.
+-- Returns m_players id.
 function View:playerId()
   return self._loadOut.playerId
 end
 
--- Returns players gadget.
+-- Returns m_players gadget.
 function View:gadget()
   return self._loadOut.gadget
 end
